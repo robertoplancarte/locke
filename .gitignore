@@ -36,3 +36,4 @@
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
+.hyperdrive/discover_cache.json

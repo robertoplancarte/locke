@@ -59,6 +59,12 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+
+  # MCP server for AI coding agents + installer for skills shipped by companion gems [https://github.com/rails-hyperdrive/rails-hyperdrive]
+  gem "rails-hyperdrive"
+
+  # Layered Rails architecture skills, installed via `bin/rails hyperdrive:init` [https://github.com/palkan/layered-rails-skills]
+  gem "layered-rails-skills"
 end
 
 group :test do
@@ -66,3 +72,4 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
+plugin "bundler-hyperdrive"
