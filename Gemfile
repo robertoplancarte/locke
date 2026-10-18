@@ -54,6 +54,12 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  # Testing framework [https://github.com/rspec/rspec-rails]
+  gem "rspec-rails"
+
+  # Test data factories [https://github.com/thoughtbot/factory_bot_rails]
+  gem "factory_bot_rails"
 end
 
 group :development do
@@ -65,11 +71,17 @@ group :development do
 
   # Layered Rails architecture skills, installed via `bin/rails hyperdrive:init` [https://github.com/palkan/layered-rails-skills]
   gem "layered-rails-skills"
+
+  # RSpec-writing skill for AI agents, installed via hyperdrive [https://github.com/rails-hyperdrive/rails-hyperdrive-martian-spec]
+  gem "rails-hyperdrive-martian-spec"
 end
 
 group :test do
-  # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
+  # Browser system specs driven by Playwright [https://github.com/YusukeIwaki/capybara-playwright-driver]
   gem "capybara"
-  gem "selenium-webdriver"
+  gem "capybara-playwright-driver"
+
+  # Test suite profiling [https://test-prof.evilmartians.io/]
+  gem "test-prof"
 end
 plugin "bundler-hyperdrive"

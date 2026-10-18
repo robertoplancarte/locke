@@ -11,6 +11,26 @@ files:
   source: layered-rails-skills@3.1.0
   source_sha: 1189683fdd681bc66a586804da44398d8222b7d4733dd4b3e5eefd240f183733
   installed_at: '2026-10-18T04:10:58Z'
+- path: ".claude/commands/bisect-order.md"
+  artifact: command
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: 8b3abeab5e7232c612b96c8c173f237d5dc410af3f8e7f9b6cc746c6cce94b2b
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/commands/event-prof.md"
+  artifact: command
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: 9c35e29caf3b09f16d4413a24a6297abfcccf37c256a667047702d6d9982724b
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/commands/factory-default-prof.md"
+  artifact: command
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: 77c4ba3dac428e65b875b6940cb8ebf554ad944b9c27d4314814fa3f71b5ef42
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/commands/fprof.md"
+  artifact: command
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: 254d9e76f3ce75604a39f81771e55c0b8690a4c183207eb6308fd3510f0d6b41
+  installed_at: '2026-10-18T04:15:58Z'
 - path: ".claude/commands/layered-rails-analyze-callbacks.md"
   artifact: command
   source: layered-rails-skills@3.1.0
@@ -51,6 +71,36 @@ files:
   source: layered-rails-skills@3.1.0
   source_sha: 2e34670e5d558bdebd6a29fb8bd35526e66feae50bb1a0a7560079c770f1e822
   installed_at: '2026-10-18T04:10:58Z'
+- path: ".claude/commands/mem-prof.md"
+  artifact: command
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: ae490e5b16fc7121909af0743013de858286644f6d32e7f8fcfd82fe77e1af07
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/commands/profile-specs.md"
+  artifact: command
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: 81c6e469841d90b10bb95e802788f76ee274f096e63d012c0fe86b315c6e071f
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/commands/rd-prof.md"
+  artifact: command
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: 833789f3359046f65e7f637929a3964117dbe9a51f80e3c657f0476125251cc1
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/commands/slowest-specs.md"
+  artifact: command
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: 318e5f4dc2a6f8c3dc97e4ef0672078b8bc6e554919046b44e09797c68942a1d
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/commands/stack-prof.md"
+  artifact: command
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: 60edbc38687734428d804b440341ee0a90e3b95694b595666c9944787fb61bb5
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/commands/tps-prof.md"
+  artifact: command
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: 5359253dd4e3d4bd0aeb94e5dde1388b22f5b3b9f0a63a3cb89b2a12094b7055
+  installed_at: '2026-10-18T04:15:58Z'
 - path: ".claude/skills/layered-rails/SKILL.md"
   artifact: skill
   source: layered-rails-skills@3.1.0
@@ -291,3 +341,28 @@ files:
   source: layered-rails-skills@3.1.0
   source_sha: 689f9e7ba1df0084c6893dcd2d219e15f63c451a1bb28037a46c67e744307892
   installed_at: '2026-10-18T04:10:58Z'
+- path: ".claude/skills/martian-spec/SKILL.md"
+  artifact: skill
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: d2492fc9c1b7904afb88d2cd96a8fa7c62258787581fa4d92c7889f7e48e9331
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/skills/martian-spec/references/data-setup.md"
+  artifact: skill_support
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: b5583107d478948070988ae8dd756cdd285d8a080377d3977f7249f9a469c1e3
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/skills/martian-spec/references/parallel-ci.md"
+  artifact: skill_support
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: e7342e0776fbcc2e74a3be32116f0c3e3dcaa708838886aef20252c4682e9421
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/skills/martian-spec/references/profiling.md"
+  artifact: skill_support
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: 7eccfc3d5baba91892ec02b4c51b45b126066b175b337a8b41f03590d7d5fcfe
+  installed_at: '2026-10-18T04:15:58Z'
+- path: ".claude/skills/martian-spec/references/structure.md"
+  artifact: skill_support
+  source: rails-hyperdrive-martian-spec@0.3.2
+  source_sha: c5877adee36d22d026c4c0f8536db1dbaaf5ab4bf33e60eed881962befdfbe91
+  installed_at: '2026-10-18T04:15:58Z'
