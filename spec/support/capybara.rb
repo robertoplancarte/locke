@@ -12,19 +12,29 @@ end
 
 Capybara.default_max_wait_time = 5
 
+# Keep the test server's port when a spec points app_host at a tenant subdomain
+Capybara.always_include_port = true
+
 RSpec.configure do |config|
   config.before(:each, type: :system) do
     driven_by :playwright
   end
 
   # Record a Playwright trace for every system spec and keep it only when the
-  # spec fails. Open with `npx playwright show-trace tmp/traces/<name>.zip`.
+  # spec fails, or always with TRACES=1. Open with
+  # `npx playwright show-trace tmp/traces/<name>.zip`.
   config.before(:each, type: :system) do
     page.driver.start_tracing(screenshots: true, snapshots: true, sources: true)
   end
 
   config.after(:each, type: :system) do |example|
-    path = Rails.root.join("tmp/traces/#{example.full_description.parameterize}.zip").to_s if example.exception
+    name = example.full_description.parameterize
+
+    # SCREENSHOTS=1 saves a full-page screenshot of where every spec ended up
+    # (failures are always captured in tmp/capybara by Rails).
+    page.save_screenshot(Rails.root.join("tmp/screenshots/#{name}.png").to_s, full: true) if ENV["SCREENSHOTS"].present?
+
+    path = Rails.root.join("tmp/traces/#{name}.zip").to_s if example.exception || ENV["TRACES"].present?
     page.driver.stop_tracing(path: path)
   end
 end

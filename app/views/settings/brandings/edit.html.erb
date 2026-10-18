@@ -1,0 +1,45 @@
+<% content_for :title, "Branding · #{current_tenant.name}" %>
+
+<h1 class="text-2xl font-semibold">Branding</h1>
+<p class="mt-1 text-sm text-gray-600">How your workspace looks to your team and customers.</p>
+
+<%= form_with model: @tenant, url: settings_branding_path, method: :patch, class: "mt-8 space-y-8 rounded-lg border border-gray-200 bg-white p-6" do |form| %>
+  <%= render "application/form_errors", record: @tenant %>
+
+  <div>
+    <%= form.label :name, "Workspace name", class: "block text-sm font-medium" %>
+    <%= form.text_field :name, required: true, class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" %>
+    <p class="mt-1 text-sm text-gray-500">Your workspace address is <span class="font-mono"><%= @tenant.host %></span>.</p>
+  </div>
+
+  <div class="grid gap-6 sm:grid-cols-2">
+    <div>
+      <%= form.label :primary_color, class: "block text-sm font-medium" %>
+      <%= form.color_field :primary_color, class: "mt-1 h-10 w-20 cursor-pointer rounded-md border border-gray-300" %>
+      <p class="mt-1 text-sm text-gray-500">Buttons and highlights.</p>
+    </div>
+    <div>
+      <%= form.label :secondary_color, class: "block text-sm font-medium" %>
+      <%= form.color_field :secondary_color, class: "mt-1 h-10 w-20 cursor-pointer rounded-md border border-gray-300" %>
+      <p class="mt-1 text-sm text-gray-500">The header bar.</p>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :logo, class: "block text-sm font-medium" %>
+    <% if @tenant.logo.attached? && @tenant.logo.persisted? %>
+      <div class="mt-2 flex items-center gap-4">
+        <%= image_tag @tenant.logo, alt: "Current logo", class: "h-12 w-auto rounded border border-gray-200 bg-gray-50 p-1" %>
+        <label class="flex items-center gap-2 text-sm">
+          <%= check_box_tag "tenant[remove_logo]", "1", false %>
+          Remove logo
+        </label>
+      </div>
+    <% end %>
+    <%= form.file_field :logo, accept: Tenant::LOGO_CONTENT_TYPES.join(","),
+          class: "mt-2 block text-sm file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-gray-300 file:bg-white file:px-3 file:py-1.5 file:text-sm hover:file:bg-gray-50" %>
+    <p class="mt-1 text-sm text-gray-500">PNG, JPEG or WebP, up to 2 MB.</p>
+  </div>
+
+  <%= form.submit "Save branding", class: "cursor-pointer rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
+<% end %>

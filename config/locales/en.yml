@@ -28,4 +28,11 @@
 #       enabled: "ON"
 
 en:
-  hello: "Hello world"
+  settings:
+    domains:
+      status:
+        pending: "Waiting for DNS"
+        active: "Active"
+        inactive: "Not pointing to us"
+        failed: "Failed"
+        releasing: "Removing"

@@ -1,0 +1,158 @@
+require "rails_helper"
+
+RSpec.describe Tenant, type: :model do
+  describe "validations" do
+    subject(:tenant) { build(:tenant, **attributes) }
+
+    let(:attributes) { {} }
+
+    it { is_expected.to be_valid }
+
+    it "defaults the brand colors" do
+      expect(tenant).to have_attributes(primary_color: "#4F46E5", secondary_color: "#0F172A")
+    end
+
+    context "without a name" do
+      let(:attributes) { { name: "" } }
+
+      it { is_expected.to be_invalid }
+    end
+
+    context "with a subdomain that has uppercase and whitespace" do
+      let(:attributes) { { subdomain: "  Acme-Corp " } }
+
+      it "normalizes it" do
+        expect(tenant.subdomain).to eq("acme-corp")
+      end
+    end
+
+    %w[acme_corp -acme acme- acme.corp].each do |subdomain|
+      context "with the malformed subdomain #{subdomain.inspect}" do
+        let(:attributes) { { subdomain: } }
+
+        it { is_expected.to be_invalid }
+      end
+    end
+
+    context "with a reserved subdomain" do
+      let(:attributes) { { subdomain: "www" } }
+
+      it "is invalid" do
+        expect(tenant).to be_invalid
+        expect(tenant.errors[:subdomain]).to include("is reserved")
+      end
+    end
+
+    context "with a subdomain already taken" do
+      let(:attributes) { { subdomain: "acme" } }
+
+      before { create(:tenant, subdomain: "acme") }
+
+      it { is_expected.to be_invalid }
+    end
+
+    context "with a lowercase hex color" do
+      let(:attributes) { { primary_color: "#ff00aa" } }
+
+      it "upcases it" do
+        expect(tenant.primary_color).to eq("#FF00AA")
+      end
+    end
+
+    %w[red #FFF #GGGGGG FF00AA].each do |color|
+      context "with the invalid color #{color.inspect}" do
+        let(:attributes) { { secondary_color: color } }
+
+        it { is_expected.to be_invalid }
+      end
+    end
+
+    context "with a PNG logo" do
+      before { tenant.logo.attach(fixture_file_upload("logo.png", "image/png")) }
+
+      it { is_expected.to be_valid }
+    end
+
+    context "with a non-image logo" do
+      before { tenant.logo.attach(io: StringIO.new("not an image"), filename: "logo.txt", content_type: "text/plain") }
+
+      it { is_expected.to be_invalid }
+    end
+  end
+
+  describe ".find_by_host" do
+    subject(:found) { described_class.find_by_host(host) }
+
+    let!(:tenant) { create(:tenant, subdomain: "acme") }
+
+    before do
+      create(:tenant_domain, :active, tenant:, hostname: "portal.acme.com")
+      create(:tenant_domain, tenant:, hostname: "pending.acme.com")
+    end
+
+    {
+      "acme.localhost" => "its subdomain",
+      "ACME.localhost" => "its subdomain in another case",
+      "portal.acme.com" => "its active custom domain"
+    }.each do |matching_host, description|
+      context "with #{description}" do
+        let(:host) { matching_host }
+
+        it { is_expected.to eq(tenant) }
+      end
+    end
+
+    {
+      "localhost" => "the root domain",
+      "www.localhost" => "the www root domain",
+      "other.localhost" => "an unknown subdomain",
+      "deep.acme.localhost" => "a nested subdomain",
+      "pending.acme.com" => "a custom domain not yet verified",
+      "acme.com" => "an unknown custom domain"
+    }.each do |other_host, description|
+      context "with #{description}" do
+        let(:host) { other_host }
+
+        it { is_expected.to be_nil }
+      end
+    end
+  end
+
+  describe "#claim_domain" do
+    subject(:domain) { tenant.claim_domain(hostname) }
+
+    let(:tenant) { create(:tenant) }
+
+    context "with a valid hostname" do
+      let(:hostname) { "portal.acme.com" }
+
+      it "records a pending domain and syncs it with Cloudflare in the background" do
+        expect(domain).to be_persisted.and be_pending
+        expect(TenantDomains::SyncJob).to have_been_enqueued.with(domain)
+      end
+    end
+
+    context "with an invalid hostname" do
+      let(:hostname) { "not a domain" }
+
+      it "returns the invalid domain without syncing it" do
+        expect(domain).not_to be_persisted
+        expect(TenantDomains::SyncJob).not_to have_been_enqueued
+      end
+    end
+  end
+
+  describe "#host" do
+    it "is the subdomain under the app's root domain" do
+      expect(build(:tenant, subdomain: "acme").host).to eq("acme.localhost")
+    end
+  end
+
+  describe ".root_host?" do
+    it "is true for the root domain and its www host only" do
+      expect(described_class.root_host?("localhost")).to be(true)
+      expect(described_class.root_host?("WWW.localhost")).to be(true)
+      expect(described_class.root_host?("acme.localhost")).to be(false)
+    end
+  end
+end

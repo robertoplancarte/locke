@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+/* Brand colors used when there's no current tenant (e.g. the root domain).
+   Tenants override these at runtime via tenant_brand_style_tag in the layout. */
+:root {
+  --brand-primary: #4F46E5;
+  --brand-primary-foreground: #FFFFFF;
+  --brand-secondary: #0F172A;
+  --brand-secondary-foreground: #FFFFFF;
+}
+
+/* `inline` makes utilities reference the runtime variables, so classes like
+   bg-brand-primary and text-brand-primary-foreground follow the tenant. */
+@theme inline {
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-foreground: var(--brand-primary-foreground);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-secondary-foreground: var(--brand-secondary-foreground);
+}

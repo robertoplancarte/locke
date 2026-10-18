@@ -9,6 +9,7 @@ abort("The Rails environment is running in production mode!") if Rails.env.produ
 # return unless Rails.env.test?
 require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
+require 'test_prof/recipes/rspec/let_it_be'
 
 # Requires supporting ruby files with custom matchers and macros, etc, in
 # spec/support/ and its subdirectories. Files matching `spec/**/*_spec.rb` are
@@ -37,6 +38,9 @@ end
 RSpec.configure do |config|
   # Call factories as create(:user) instead of FactoryBot.create(:user)
   config.include FactoryBot::Syntax::Methods
+
+  # Clears the test queue adapter between examples so enqueued jobs don't leak
+  config.include ActiveJob::TestHelper
 
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_paths = [

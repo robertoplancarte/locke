@@ -1,0 +1,33 @@
+<% content_for :title, "Workspaces" %>
+
+<h1 class="text-2xl font-semibold">Workspaces</h1>
+<p class="mt-1 text-sm text-gray-600">
+  Every tenant in this <%= Rails.env %> database. This page only exists in development and test.
+</p>
+
+<% if @tenants.any? %>
+  <ul class="mt-8 divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
+    <% @tenants.each do |tenant| %>
+      <li class="flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
+        <span class="flex shrink-0" aria-hidden="true">
+          <span class="h-6 w-6 rounded-l border border-gray-200" style="background-color: <%= tenant.primary_color %>"></span>
+          <span class="h-6 w-6 rounded-r border border-l-0 border-gray-200" style="background-color: <%= tenant.secondary_color %>"></span>
+        </span>
+
+        <div class="min-w-0 flex-1">
+          <%= link_to tenant.name, tenant_root_url(host: tenant.host), class: "font-medium hover:underline" %>
+          <p class="font-mono text-sm text-gray-500 break-all"><%= tenant.host %></p>
+        </div>
+
+        <% active_domains = tenant.domains.select(&:active?) %>
+        <% if active_domains.any? %>
+          <p class="w-full text-sm text-gray-500 sm:w-auto">
+            Custom: <%= safe_join(active_domains.map { |domain| tag.span(domain.hostname, class: "font-mono") }, ", ") %>
+          </p>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="mt-8 text-sm text-gray-600">No tenants yet. Run <code class="font-mono">bin/rails db:seed</code> to create one.</p>
+<% end %>

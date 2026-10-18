@@ -31,6 +31,13 @@ Rails.application.configure do
   # Store uploaded files on the local file system in a temporary directory.
   config.active_storage.service = :test
 
+  # Tenants are <subdomain>.localhost (the default root domain), which browsers
+  # resolve to loopback, so system specs can visit them too.
+  config.x.cloudflare.api_token = "test-token"
+  config.x.cloudflare.zone_id = "test-zone"
+
+  config.active_job.queue_adapter = :test
+
   # Tell Action Mailer not to deliver emails to the real world.
   # The :test delivery method accumulates sent emails in the
   # ActionMailer::Base.deliveries array.

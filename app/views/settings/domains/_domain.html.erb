@@ -1,0 +1,73 @@
+<li id="<%= dom_id(domain) %>" class="rounded-lg border border-gray-200 bg-white p-6">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <p class="font-mono font-medium"><%= domain.hostname %></p>
+      <div class="mt-1 flex flex-wrap items-center gap-3">
+        <%= render "settings/domains/status_badge", domain: %>
+        <% if domain.last_checked_at %>
+          <span class="text-xs text-gray-500">Checked <%= time_ago_in_words(domain.last_checked_at) %> ago</span>
+        <% end %>
+      </div>
+    </div>
+
+    <% unless domain.releasing? %>
+      <div class="flex gap-2">
+        <% unless domain.failed? %>
+          <%= button_to "Check now", settings_domain_check_path(domain),
+                class: "cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50" %>
+        <% end %>
+        <%= button_to "Remove", settings_domain_path(domain), method: :delete,
+              form: { data: { turbo_confirm: "Remove #{domain.hostname}? It will stop working right away." } },
+              class: "cursor-pointer rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50" %>
+      </div>
+    <% end %>
+  </div>
+
+  <% case domain.status %>
+  <% when "active" %>
+    <p class="mt-4 text-sm text-gray-600">
+      Live at <%= link_to "https://#{domain.hostname}", "https://#{domain.hostname}", class: "underline", target: "_blank", rel: "noopener" %> with a TLS certificate managed for you.
+    </p>
+  <% when "failed" %>
+    <p class="mt-4 text-sm text-gray-600">This domain couldn't be set up. Remove it and try again, or contact support.</p>
+  <% when "pending", "inactive" %>
+    <div class="mt-4 text-sm text-gray-600">
+      <p>
+        <% if domain.inactive? %>
+          This domain no longer points to us, so it's not being served. Restore the CNAME record below to bring it back.
+        <% else %>
+          Add these records at your DNS provider. Verification usually takes a few minutes after DNS updates, and is checked automatically.
+          Unverified domains are removed after <%= distance_of_time_in_words(TenantDomain::PENDING_TTL) %>.
+        <% end %>
+      </p>
+      <div class="mt-3 overflow-x-auto">
+        <table class="w-full text-left font-mono text-xs">
+          <thead class="text-gray-500">
+            <tr><th class="py-1 pr-4 font-medium">Type</th><th class="py-1 pr-4 font-medium">Name</th><th class="py-1 font-medium">Value</th></tr>
+          </thead>
+          <tbody class="text-gray-900">
+            <% domain.dns_records.each do |record| %>
+              <tr class="border-t border-gray-100">
+                <td class="py-2 pr-4"><%= record[:type] %></td>
+                <td class="py-2 pr-4 break-all"><%= record[:name] %></td>
+                <td class="py-2 break-all"><%= record[:value] %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-3 text-xs text-gray-500">
+        The CNAME routes traffic to us and is all that's required. The TXT record is optional: add it to verify the domain before switching traffic over.
+        For a root domain like <span class="font-mono">yourcompany.com</span>, use your DNS provider's ALIAS or CNAME flattening in place of the CNAME.
+      </p>
+    </div>
+  <% end %>
+
+  <% if domain.verification_errors.any? && !domain.active? %>
+    <ul class="mt-4 list-disc space-y-1 pl-5 text-sm text-red-700">
+      <% domain.verification_errors.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</li>

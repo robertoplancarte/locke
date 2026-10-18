@@ -83,5 +83,10 @@ group :test do
 
   # Test suite profiling [https://test-prof.evilmartians.io/]
   gem "test-prof"
+
+  # Stub HTTP requests to external APIs [https://github.com/bblimke/webmock]
+  gem "webmock"
 end
 plugin "bundler-hyperdrive"
+
+gem "acts_as_tenant", "~> 2.2"

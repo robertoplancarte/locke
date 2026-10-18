@@ -10,6 +10,21 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # Tenant workspaces: <subdomain>.<root_domain> or a verified custom domain
+  constraints(->(request) { !Tenant.root_host?(request.host) }) do
+    namespace :settings do
+      resource :branding, only: %i[edit update]
+      resources :domains, only: %i[index create destroy] do
+        resource :check, only: :create, module: :domains
+      end
+    end
+
+    root to: redirect("/settings/branding/edit", status: 302), as: :tenant_root
+  end
+
+  # A directory of tenant workspaces on the bare root domain, for finding your
+  # way around locally. Never in production, where it would list every customer.
+  if Rails.env.local?
+    root "development/tenants#index"
+  end
 end

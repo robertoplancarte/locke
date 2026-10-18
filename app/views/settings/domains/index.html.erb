@@ -1,0 +1,25 @@
+<% content_for :title, "Domains · #{current_tenant.name}" %>
+<%= turbo_stream_from current_tenant, :domains %>
+
+<h1 class="text-2xl font-semibold">Custom domains</h1>
+<p class="mt-1 text-sm text-gray-600">
+  Serve your workspace from your own domain, like <span class="font-mono">portal.yourcompany.com</span>.
+  It stays available at <span class="font-mono"><%= current_tenant.host %></span> too.
+</p>
+
+<%= form_with model: @domain, url: settings_domains_path, class: "mt-8 rounded-lg border border-gray-200 bg-white p-6" do |form| %>
+  <%= render "application/form_errors", record: @domain %>
+
+  <%= form.label :hostname, "Domain", class: "block text-sm font-medium" %>
+  <div class="mt-1 flex flex-wrap gap-3">
+    <%= form.text_field :hostname, required: true, placeholder: "portal.yourcompany.com", autocapitalize: "none", spellcheck: false,
+          class: "min-w-0 flex-1 rounded-md border border-gray-300 px-3 py-2 font-mono" %>
+    <%= form.submit "Add domain", class: "cursor-pointer rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
+  </div>
+<% end %>
+
+<% if @domains.any? %>
+  <ul class="mt-8 space-y-4">
+    <%= render partial: "settings/domains/domain", collection: @domains %>
+  </ul>
+<% end %>
