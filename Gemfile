@@ -20,7 +20,7 @@ gem "tailwindcss-rails"
 gem "jbuilder"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-# gem "bcrypt", "~> 3.1.7"
+gem "bcrypt", "~> 3.1.7"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
@@ -74,6 +74,9 @@ group :development do
 
   # RSpec-writing skill for AI agents, installed via hyperdrive [https://github.com/rails-hyperdrive/rails-hyperdrive-martian-spec]
   gem "rails-hyperdrive-martian-spec"
+
+  # Catch sent emails and browse them at /letter_opener [https://github.com/fgrehm/letter_opener_web]
+  gem "letter_opener_web"
 end
 
 group :test do
@@ -90,3 +93,17 @@ end
 plugin "bundler-hyperdrive"
 
 gem "acts_as_tenant", "~> 2.2"
+
+gem "authentication-zero", "~> 4.0"
+# Use Pwned to check if a password has been found in any of the huge data breaches [https://github.com/philnash/pwned]
+gem "pwned"
+# Use OmniAuth to support multi-provider authentication [https://github.com/omniauth/omniauth]
+gem "omniauth"
+# Provides a mitigation against CVE-2015-9284 [https://github.com/cookpad/omniauth-rails_csrf_protection]
+gem "omniauth-rails_csrf_protection"
+# Use rotp for generating and validating one time passwords [https://github.com/mdp/rotp]
+gem "rotp"
+# Use rqrcode for creating and rendering QR codes into various formats [https://github.com/whomwah/rqrcode]
+gem "rqrcode"
+# Use webauthn for making rails become a conformant web authn relying party [https://github.com/cedarcode/webauthn-ruby]
+gem "webauthn"

@@ -1,0 +1,55 @@
+<% content_for :title, "Authentication · #{current_tenant.name}" %>
+
+<h1 class="text-2xl font-semibold">Authentication</h1>
+<p class="mt-1 text-sm text-gray-600">How people join and sign in to your workspace.</p>
+
+<%= form_with model: current_tenant, url: settings_authentication_path, method: :patch, class: "mt-8 space-y-8 rounded-lg border border-gray-200 bg-white p-6" do |form| %>
+  <%= render "application/form_errors", record: current_tenant %>
+
+  <fieldset>
+    <legend class="text-sm font-semibold">Joining and signing in</legend>
+
+    <div class="mt-4 space-y-4">
+      <% [
+           [ :sign_up_enabled, "Allow sign-ups", "Anyone can create an account. When off, people can only join by invitation." ],
+           [ :sign_in_links_enabled, "Email sign-in links", "People can sign in with a link sent to their email instead of their password." ],
+           [ :social_sign_in_enabled, "Social sign-in", "People can sign in with an account from another service." ]
+         ].each do |attribute, label, hint| %>
+        <div class="flex gap-3">
+          <div class="flex h-6 items-center">
+            <%= form.check_box attribute, aria: { describedby: "#{attribute}_hint" }, class: "size-4 cursor-pointer rounded border-gray-300 accent-brand-primary" %>
+          </div>
+          <div class="text-sm/6">
+            <%= form.label attribute, label, class: "font-medium text-gray-900" %>
+            <p id="<%= attribute %>_hint" class="text-gray-500"><%= hint %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend class="text-sm font-semibold">Two-factor authentication</legend>
+    <p class="mt-1 text-sm text-gray-500">A code from an authenticator app, asked for after the password.</p>
+
+    <div class="mt-4 space-y-4">
+      <% {
+           "off" => [ "Off", "Nobody can set it up. People who already have it keep using it." ],
+           "optional" => [ "Optional", "Each person decides whether to set it up." ],
+           "required" => [ "Required", "Everyone must set it up before they can use the workspace." ]
+         }.each do |value, (label, hint)| %>
+        <div class="flex gap-3">
+          <div class="flex h-6 items-center">
+            <%= form.radio_button :two_factor, value, aria: { describedby: "two_factor_#{value}_hint" }, class: "size-4 cursor-pointer border-gray-300 accent-brand-primary" %>
+          </div>
+          <div class="text-sm/6">
+            <%= form.label :two_factor, label, value:, class: "font-medium text-gray-900" %>
+            <p id="two_factor_<%= value %>_hint" class="text-gray-500"><%= hint %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <%= form.submit "Save settings", class: "cursor-pointer rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
+<% end %>

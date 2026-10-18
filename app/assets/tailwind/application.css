@@ -17,3 +17,61 @@
   --color-brand-secondary: var(--brand-secondary);
   --color-brand-secondary-foreground: var(--brand-secondary-foreground);
 }
+
+/* Readable defaults for bare HTML, mostly the views authentication-zero generated.
+   Only elements without a class attribute are touched, so anything styled with
+   utilities keeps exactly the look it asks for. */
+@layer base {
+  h1:not([class]) {
+    @apply mb-6 text-2xl font-bold tracking-tight text-gray-900;
+  }
+
+  h2:not([class]) {
+    @apply mt-8 mb-2 text-lg font-semibold text-gray-900;
+  }
+
+  * + p:not([class]) {
+    @apply mt-3;
+  }
+
+  a:not([class]) {
+    @apply font-medium text-brand-primary underline-offset-2 hover:underline;
+  }
+
+  ul:not([class]) {
+    @apply my-3 list-disc space-y-1 pl-5;
+  }
+
+  hr:not([class]) {
+    @apply my-8 border-gray-200;
+  }
+
+  figure:not([class]) {
+    @apply my-4;
+  }
+
+  figcaption:not([class]) {
+    @apply mt-2 text-sm text-gray-500;
+  }
+
+  /* Generated forms wrap each field in a bare div */
+  form:not([class]) > div:not([class]) + div:not([class]) {
+    @apply mt-4;
+  }
+
+  label:not([class]) {
+    @apply mb-1 block text-sm/6 font-medium text-gray-900;
+  }
+
+  :is(input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="tel"], input[type="url"], textarea, select):not([class]) {
+    @apply block w-full max-w-md rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-brand-primary sm:text-sm/6;
+  }
+
+  :is(input[type="submit"], button):not([class]) {
+    @apply cursor-pointer rounded-md bg-brand-primary px-3 py-1.5 text-sm/6 font-semibold text-brand-primary-foreground shadow-xs hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary;
+  }
+
+  code:not([class]) {
+    @apply rounded bg-gray-100 px-1 py-0.5 font-mono text-sm;
+  }
+}

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_060000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_071731) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,52 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_060000) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "events", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "action", null: false
+    t.string "user_agent"
+    t.string "ip_address"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_events_on_user_id"
+  end
+
+  create_table "recovery_codes", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "code", null: false
+    t.boolean "used", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_recovery_codes_on_user_id"
+  end
+
+  create_table "security_keys", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name", null: false
+    t.string "external_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "public_key", null: false
+    t.bigint "sign_count", default: 0, null: false
+    t.index ["external_id"], name: "index_security_keys_on_external_id", unique: true
+    t.index ["user_id"], name: "index_security_keys_on_user_id"
+  end
+
+  create_table "sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "user_agent"
+    t.string "ip_address"
+    t.datetime "sudo_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "sign_in_tokens", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_sign_in_tokens_on_user_id"
+  end
+
   create_table "tenant_domains", force: :cascade do |t|
     t.bigint "tenant_id", null: false
     t.string "hostname", null: false
@@ -69,11 +115,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_060000) do
     t.string "secondary_color", default: "#0F172A", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "sign_up_enabled", default: true, null: false
+    t.boolean "sign_in_links_enabled", default: true, null: false
+    t.boolean "social_sign_in_enabled", default: true, null: false
+    t.string "two_factor", default: "optional", null: false
     t.index ["domain"], name: "index_tenants_on_domain", unique: true, where: "(domain IS NOT NULL)"
     t.index ["subdomain"], name: "index_tenants_on_subdomain", unique: true
   end
 
+  create_table "users", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.string "email", null: false
+    t.string "password_digest", null: false
+    t.boolean "verified", default: false, null: false
+    t.boolean "otp_required_for_sign_in", default: false, null: false
+    t.string "otp_secret", null: false
+    t.string "webauthn_id", null: false
+    t.string "provider"
+    t.string "uid"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "email"], name: "index_users_on_tenant_id_and_email", unique: true
+    t.index ["tenant_id", "provider", "uid"], name: "index_users_on_tenant_id_and_provider_and_uid", unique: true, where: "(provider IS NOT NULL)"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "events", "users"
+  add_foreign_key "recovery_codes", "users"
+  add_foreign_key "security_keys", "users"
+  add_foreign_key "sessions", "users"
+  add_foreign_key "sign_in_tokens", "users"
   add_foreign_key "tenant_domains", "tenants"
+  add_foreign_key "users", "tenants"
 end

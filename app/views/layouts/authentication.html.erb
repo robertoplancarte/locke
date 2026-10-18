@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="h-full bg-gray-50">
+  <head>
+    <%= render "layouts/head" %>
+  </head>
+
+  <body class="h-full text-gray-900">
+    <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div class="px-4 sm:mx-auto sm:w-full sm:max-w-md">
+        <% if current_tenant.logo.attached? %>
+          <%= image_tag current_tenant.logo, alt: current_tenant.name, class: "mx-auto h-10 w-auto" %>
+        <% else %>
+          <div class="mx-auto flex size-10 items-center justify-center rounded-lg bg-brand-primary text-lg font-bold text-brand-primary-foreground" aria-hidden="true">
+            <%= current_tenant.name.first.upcase %>
+          </div>
+        <% end %>
+        <h2 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-gray-900"><%= yield :heading %></h2>
+      </div>
+
+      <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+        <div class="bg-white px-6 py-12 shadow-sm sm:rounded-lg sm:px-12">
+          <%= render "application/flash" %>
+          <%= yield %>
+        </div>
+
+        <% if content_for?(:footer) %>
+          <p class="mt-10 text-center text-sm/6 text-gray-500"><%= yield :footer %></p>
+        <% end %>
+      </div>
+    </div>
+  </body>
+</html>

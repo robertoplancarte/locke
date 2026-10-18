@@ -8,7 +8,12 @@ class Tenant < ApplicationRecord
   LOGO_MAX_SIZE = 2.megabytes
 
   has_many :domains, class_name: "TenantDomain", dependent: :restrict_with_error
+  has_many :users, dependent: :restrict_with_error
   has_one_attached :logo
+
+  # off: nobody can set up 2FA; optional: users choose; required: users must set it up before using the app.
+  # Users who already set it up keep being challenged either way.
+  enum :two_factor, { off: "off", optional: "optional", required: "required" }, prefix: true, validate: true
 
   normalizes :subdomain, with: ->(value) { value.strip.downcase }
   normalizes :primary_color, :secondary_color, with: ->(value) { value.strip.upcase }

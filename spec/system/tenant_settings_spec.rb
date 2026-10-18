@@ -3,10 +3,15 @@ require "rails_helper"
 RSpec.describe "Tenant settings", type: :system do
   let!(:tenant) { create(:tenant, subdomain: "acme", name: "Acme") }
 
-  before { use_tenant_host(tenant) }
+  let!(:user) { create(:user, tenant:) }
+
+  before do
+    use_tenant_host(tenant)
+    sign_in_as user
+  end
 
   it "rebrands the workspace" do
-    visit "/"
+    visit "/settings/branding/edit"
 
     fill_in "Workspace name", with: "Acme Corp"
     find_field("Primary color").set("#16a34a")

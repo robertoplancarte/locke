@@ -1,35 +1,14 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || current_tenant&.name || "Auth" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Auth">
-    <meta name="mobile-web-app-capable" content="yes">
-    <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
-
-    <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
-    <%= yield :head %>
-
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
-
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
-    <%= tenant_brand_style_tag %>
-    <%= javascript_importmap_tags %>
+    <%= render "layouts/head" %>
   </head>
 
   <body class="min-h-screen bg-gray-50 text-gray-900">
     <% if current_tenant %>
       <header class="bg-brand-secondary text-brand-secondary-foreground">
         <div class="mx-auto flex max-w-4xl flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3">
-          <%= link_to tenant_root_path, class: "flex items-center gap-3 font-semibold" do %>
+          <%= link_to root_path, class: "flex items-center gap-3 font-semibold" do %>
             <% if current_tenant.logo.attached? %>
               <%= image_tag current_tenant.logo, alt: "", class: "h-8 w-auto" %>
             <% end %>
@@ -39,6 +18,7 @@
           <nav class="flex gap-5 text-sm">
             <%= link_to "Branding", edit_settings_branding_path, class: "opacity-80 hover:opacity-100" %>
             <%= link_to "Domains", settings_domains_path, class: "opacity-80 hover:opacity-100" %>
+            <%= link_to "Authentication", edit_settings_authentication_path, class: "opacity-80 hover:opacity-100" %>
           </nav>
         </div>
       </header>
