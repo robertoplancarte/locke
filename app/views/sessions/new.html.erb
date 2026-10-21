@@ -33,8 +33,11 @@
   </div>
 <% end %>
 
-<%# Mirrors the providers in config/initializers/omniauth.rb %>
-<% if current_tenant.social_sign_in_enabled? && !Rails.env.production? %>
+<%# The tenant's own identity providers, plus the app's from config/initializers/omniauth.rb %>
+<% identity_providers = current_tenant.identity_providers.enabled.order(:created_at) %>
+<% developer_sign_in = current_tenant.social_sign_in_enabled? && !Rails.env.production? %>
+<% if identity_providers.any? || developer_sign_in %>
+  <% provider_button_class = "flex w-full cursor-pointer items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm/6 font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50" %>
   <div>
     <div class="mt-10 flex items-center gap-x-6">
       <div class="w-full flex-1 border-t border-gray-200"></div>
@@ -42,9 +45,14 @@
       <div class="w-full flex-1 border-t border-gray-200"></div>
     </div>
 
-    <div class="mt-6">
-      <%= button_to "/auth/developer", data: { turbo: false }, form_class: "w-full", class: "flex w-full cursor-pointer items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm/6 font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50" do %>
-        Developer
+    <div class="mt-6 flex flex-col gap-3">
+      <% identity_providers.each do |identity_provider| %>
+        <%= button_to identity_provider.name, identity_provider.auth_path, data: { turbo: false }, form_class: "w-full", class: provider_button_class %>
+      <% end %>
+      <% if developer_sign_in %>
+        <%= button_to "/auth/developer", data: { turbo: false }, form_class: "w-full", class: provider_button_class do %>
+          Developer
+        <% end %>
       <% end %>
     </div>
   </div>

@@ -107,3 +107,6 @@ gem "rotp"
 gem "rqrcode"
 # Use webauthn for making rails become a conformant web authn relying party [https://github.com/cedarcode/webauthn-ruby]
 gem "webauthn"
+
+gem "omniauth_openid_connect", "~> 0.8.0"
+gem "omniauth-saml", "~> 2.2"

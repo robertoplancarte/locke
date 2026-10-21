@@ -118,6 +118,53 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
+  describe "changing the subdomain" do
+    let_it_be(:tenant) { create(:tenant, subdomain: "acme") }
+
+    def retired_subdomains = tenant.retired_subdomains.pluck(:subdomain)
+
+    it "keeps the old one for redirects" do
+      tenant.update!(subdomain: "acme-corp")
+
+      expect(retired_subdomains).to eq([ "acme" ])
+      expect(described_class.find_by_retired_host("ACME.localhost")).to eq(tenant)
+    end
+
+    it "makes an old one current again when moving back" do
+      tenant.update!(subdomain: "acme-corp")
+      tenant.update!(subdomain: "acme")
+
+      expect(retired_subdomains).to eq([ "acme-corp" ])
+      expect(described_class.find_by_retired_host("acme.localhost")).to be_nil
+    end
+
+    it "reserves the old one from other tenants" do
+      tenant.update!(subdomain: "acme-corp")
+
+      other = build(:tenant, subdomain: "acme")
+
+      expect(other).to be_invalid
+      expect(other.errors[:subdomain]).to include("has already been taken")
+    end
+
+    it "leaves other changes alone" do
+      tenant.update!(name: "Acme Corp")
+
+      expect(retired_subdomains).to be_empty
+    end
+  end
+
+  describe ".find_by_retired_host" do
+    let_it_be(:tenant) { create(:tenant, subdomain: "acme") }
+
+    before_all { tenant.update!(subdomain: "acme-corp") }
+
+    it "ignores hosts that aren't a subdomain" do
+      expect(described_class.find_by_retired_host("acme.localhost.evil.com")).to be_nil
+      expect(described_class.find_by_retired_host("deep.acme.localhost")).to be_nil
+    end
+  end
+
   describe "#claim_domain" do
     subject(:domain) { tenant.claim_domain(hostname) }
 

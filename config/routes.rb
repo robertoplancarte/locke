@@ -15,10 +15,12 @@ Rails.application.routes.draw do
   constraints(->(request) { !Tenant.root_host?(request.host) }) do
     namespace :settings do
       resource :branding, only: %i[edit update]
+      resource :subdomain, only: :update
       resource :authentication, only: %i[edit update]
       resources :domains, only: %i[index create destroy] do
         resource :check, only: :create, module: :domains
       end
+      resources :identity_providers, except: :show
     end
 
     # Accounts belong to one tenant, so authentication only exists on tenant hosts
@@ -28,6 +30,7 @@ Rails.application.routes.draw do
     post "sign_up", to: "registrations#create"
     resources :sessions, only: [:index, :show, :destroy]
     resource  :password, only: [:edit, :update]
+    resources :identities, only: [:index, :destroy]
     namespace :identity do
       resource :email,              only: [:edit, :update]
       resource :email_verification, only: [:show, :create]
@@ -51,6 +54,10 @@ Rails.application.routes.draw do
     get  "/auth/failure",            to: "sessions/omniauth#failure"
     get  "/auth/:provider/callback", to: "sessions/omniauth#create"
     post "/auth/:provider/callback", to: "sessions/omniauth#create"
+    # Sign-in with a tenant's own OIDC or SAML provider; the request path itself is OmniAuth's
+    match "/auth/:protocol/:identity_provider_id/callback", to: "sessions/omniauth#create", via: %i[get post],
+      constraints: { protocol: /oidc|saml/, identity_provider_id: /\d+/ }
+    get "/auth/saml/:identity_provider_id/metadata", to: "identity_providers/saml_metadata#show", as: :saml_metadata
     post "users/:user_id/masquerade", to: "masquerades#create", as: :user_masquerade
     resource :invitation, only: [:new, :create]
     namespace :sessions do

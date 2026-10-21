@@ -36,6 +36,16 @@ RSpec.describe "Tenant settings", type: :system do
     end
   end
 
+  it "changes the workspace address" do
+    visit "/settings/domains"
+
+    fill_in "Subdomain", with: "acme-corp"
+    accept_confirm { click_on "Change address" }
+
+    expect(page).to have_current_path(%r{\Ahttp://acme-corp\.localhost:\d+/sign_in\z}, url: true)
+    expect(page).to have_button("Sign in")
+  end
+
   it "removes a custom domain" do
     create(:tenant_domain, :active, tenant:, hostname: "portal.acme.com")
     visit "/settings/domains"

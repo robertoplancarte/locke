@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_071731) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -52,6 +52,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_071731) do
     t.index ["user_id"], name: "index_events_on_user_id"
   end
 
+  create_table "identities", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "user_id", null: false
+    t.string "provider", null: false
+    t.string "uid", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "identity_provider_id"
+    t.index ["identity_provider_id"], name: "index_identities_on_identity_provider_id"
+    t.index ["tenant_id", "provider", "identity_provider_id", "uid"], name: "index_identities_on_tenant_provider_and_uid", unique: true, nulls_not_distinct: true
+    t.index ["user_id"], name: "index_identities_on_user_id"
+  end
+
+  create_table "identity_providers", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.string "name", null: false
+    t.string "protocol", null: false
+    t.boolean "enabled", default: false, null: false
+    t.string "issuer"
+    t.string "client_id"
+    t.text "client_secret"
+    t.string "idp_entity_id"
+    t.string "idp_sso_url"
+    t.text "idp_certificate"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id"], name: "index_identity_providers_on_tenant_id"
+  end
+
   create_table "recovery_codes", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "code", null: false
@@ -59,6 +88,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_071731) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_recovery_codes_on_user_id"
+  end
+
+  create_table "retired_subdomains", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.string "subdomain", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["subdomain"], name: "index_retired_subdomains_on_subdomain", unique: true
+    t.index ["tenant_id"], name: "index_retired_subdomains_on_tenant_id"
   end
 
   create_table "security_keys", force: :cascade do |t|
@@ -131,18 +169,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_071731) do
     t.boolean "otp_required_for_sign_in", default: false, null: false
     t.string "otp_secret", null: false
     t.string "webauthn_id", null: false
-    t.string "provider"
-    t.string "uid"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["tenant_id", "email"], name: "index_users_on_tenant_id_and_email", unique: true
-    t.index ["tenant_id", "provider", "uid"], name: "index_users_on_tenant_id_and_provider_and_uid", unique: true, where: "(provider IS NOT NULL)"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "events", "users"
+  add_foreign_key "identities", "identity_providers"
+  add_foreign_key "identities", "tenants"
+  add_foreign_key "identities", "users"
+  add_foreign_key "identity_providers", "tenants"
   add_foreign_key "recovery_codes", "users"
+  add_foreign_key "retired_subdomains", "tenants"
   add_foreign_key "security_keys", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "sign_in_tokens", "users"

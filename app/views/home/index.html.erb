@@ -11,6 +11,10 @@
   <%= link_to "Change email address", edit_identity_email_path %>
 </div>
 
+<div>
+  <%= link_to "Sign-in providers", identities_path %>
+</div>
+
 <% if Current.user.can_set_up_two_factor? %>
   <div>
     <%= link_to "Two-Factor Authentication", new_two_factor_authentication_profile_totp_path %>

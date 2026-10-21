@@ -3,6 +3,10 @@ class User < ApplicationRecord
 
   has_secure_password
 
+  # Deterministic, so accounts can still be found by email
+  encrypts :email, deterministic: true
+  encrypts :otp_secret
+
   generates_token_for :email_verification, expires_in: 2.days do
     email
   end
@@ -16,6 +20,7 @@ class User < ApplicationRecord
   has_many :security_keys, dependent: :destroy
   has_many :sign_in_tokens, dependent: :destroy
   has_many :events, dependent: :destroy
+  has_many :identities, dependent: :destroy
 
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates_uniqueness_to_tenant :email

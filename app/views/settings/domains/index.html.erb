@@ -1,7 +1,36 @@
 <% content_for :title, "Domains · #{current_tenant.name}" %>
 <%= turbo_stream_from current_tenant, :domains %>
 
-<h1 class="text-2xl font-semibold">Custom domains</h1>
+<h1 class="text-2xl font-semibold">Workspace address</h1>
+<p class="mt-1 text-sm text-gray-600">Where your workspace lives on <span class="font-mono"><%= Rails.configuration.x.root_domain %></span>.</p>
+
+<%# Not a Turbo submission: it can't follow the redirect to the new address, which is another host %>
+<%= form_with model: @tenant, url: settings_subdomain_path, method: :patch, class: "mt-8 rounded-lg border border-gray-200 bg-white p-6",
+      data: { turbo: false, controller: "confirm", action: "confirm#submit",
+              confirm_message_value: "Change your workspace address? Everyone on the current one will have to sign in again." } do |form| %>
+  <%= render "application/form_errors", record: @tenant %>
+
+  <%= form.label :subdomain, "Subdomain", class: "block text-sm font-medium" %>
+  <div class="mt-1 flex flex-wrap items-center gap-3">
+    <div class="flex min-w-0 flex-1 items-center rounded-md border border-gray-300 font-mono focus-within:outline-2 focus-within:outline-brand-primary">
+      <%= form.text_field :subdomain, required: true, autocapitalize: "none", spellcheck: false, aria: { describedby: "subdomain_hint" },
+            class: "min-w-0 flex-1 rounded-l-md px-3 py-2 outline-none" %>
+      <span class="shrink-0 pr-3 text-gray-500">.<%= Rails.configuration.x.root_domain %></span>
+    </div>
+    <%= form.submit "Change address", class: "cursor-pointer rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
+  </div>
+  <div id="subdomain_hint" class="mt-2 space-y-1 text-sm text-gray-500">
+    <p>
+      The current address redirects to the new one, so bookmarks and links already sent by email keep working,
+      and stays reserved for your workspace. Anyone signed in on it has to sign in again at the new one.
+    </p>
+    <% if current_tenant.identity_providers.any? %>
+      <p class="text-yellow-800">Your identity providers are set up with URLs on this address. Update them in your providers after changing it.</p>
+    <% end %>
+  </div>
+<% end %>
+
+<h2 class="mt-12 text-xl font-semibold">Custom domains</h2>
 <p class="mt-1 text-sm text-gray-600">
   Serve your workspace from your own domain, like <span class="font-mono">portal.yourcompany.com</span>.
   It stays available at <span class="font-mono"><%= current_tenant.host %></span> too.

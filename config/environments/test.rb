@@ -57,4 +57,10 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Fixed keys for encrypted attributes (e.g. identity provider client secrets) outside
+  # production; production reads them from credentials (`bin/rails db:encryption:init`).
+  config.active_record.encryption.primary_key = "test-primary-key-not-for-production"
+  config.active_record.encryption.deterministic_key = "test-deterministic-key-not-for-production"
+  config.active_record.encryption.key_derivation_salt = "test-key-derivation-salt-not-for-production"
 end

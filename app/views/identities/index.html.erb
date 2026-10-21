@@ -1,0 +1,29 @@
+<h1>Sign-in providers</h1>
+<p>You can sign in with any of these providers instead of your password.</p>
+
+<div id="identities">
+  <% @identities.each do |identity| %>
+    <div id="<%= dom_id identity %>">
+      <p>
+        <strong><%= identity.provider_name %></strong>
+        linked <%= time_ago_in_words identity.created_at %> ago
+      </p>
+      <%= button_to "Unlink", identity, method: :delete %>
+    </div>
+  <% end %>
+</div>
+
+<%# Mirrors the providers in config/initializers/omniauth.rb %>
+<% if current_tenant.social_sign_in_enabled? && !Rails.env.production? %>
+  <br>
+
+  <div>
+    <%= button_to "Link Developer", "/auth/developer", data: { turbo: false } %>
+  </div>
+<% end %>
+
+<br>
+
+<div>
+  <%= link_to "Back", root_path %>
+</div>

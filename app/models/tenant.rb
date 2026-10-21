@@ -9,6 +9,8 @@ class Tenant < ApplicationRecord
 
   has_many :domains, class_name: "TenantDomain", dependent: :restrict_with_error
   has_many :users, dependent: :restrict_with_error
+  has_many :identity_providers, dependent: :destroy
+  has_many :retired_subdomains, dependent: :delete_all
   has_one_attached :logo
 
   # off: nobody can set up 2FA; optional: users choose; required: users must set it up before using the app.
@@ -24,6 +26,13 @@ class Tenant < ApplicationRecord
     exclusion: { in: RESERVED_SUBDOMAINS, message: "is reserved" }
   validates :primary_color, :secondary_color, format: { with: HEX_COLOR_FORMAT, message: "must be a hex color like #1A2B3C" }
   validate :logo_is_an_acceptable_image
+  validate :subdomain_not_retired_by_another_tenant, if: :subdomain_changed?
+
+  # The old subdomain keeps redirecting here; moving back to an old one makes it current again
+  after_update if: :subdomain_previously_changed? do
+    retired_subdomains.where(subdomain:).delete_all
+    retired_subdomains.create!(subdomain: subdomain_previously_was)
+  end
 
   # Resolves the tenant for a request host: hosts under the app's root domain
   # are matched by subdomain, any other host by its active custom domain.
@@ -37,6 +46,12 @@ class Tenant < ApplicationRecord
     else
       joins(:domains).merge(TenantDomain.active).find_by(tenant_domains: { hostname: host })
     end
+  end
+
+  # The tenant whose old subdomain this host is, to redirect to where it lives now
+  def self.find_by_retired_host(host, root_domain: Rails.configuration.x.root_domain)
+    subdomain = normalize_host(host).delete_suffix(".#{root_domain}")
+    joins(:retired_subdomains).find_by(retired_subdomains: { subdomain: }) unless subdomain.include?(".")
   end
 
   def self.root_host?(host, root_domain: Rails.configuration.x.root_domain)
@@ -60,6 +75,10 @@ class Tenant < ApplicationRecord
   def secondary_brand_color = BrandColor.new(secondary_color)
 
   private
+
+  def subdomain_not_retired_by_another_tenant
+    errors.add(:subdomain, :taken) if RetiredSubdomain.where(subdomain:).where.not(tenant_id: id).exists?
+  end
 
   def logo_is_an_acceptable_image
     return unless logo.attached?
