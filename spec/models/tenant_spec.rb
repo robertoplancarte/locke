@@ -118,6 +118,53 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
+  describe "changing the subdomain" do
+    let_it_be(:tenant) { create(:tenant, subdomain: "acme") }
+
+    def retired_subdomains = tenant.retired_subdomains.pluck(:subdomain)
+
+    it "keeps the old one for redirects" do
+      tenant.update!(subdomain: "acme-corp")
+
+      expect(retired_subdomains).to eq([ "acme" ])
+      expect(described_class.find_by_retired_host("ACME.localhost")).to eq(tenant)
+    end
+
+    it "makes an old one current again when moving back" do
+      tenant.update!(subdomain: "acme-corp")
+      tenant.update!(subdomain: "acme")
+
+      expect(retired_subdomains).to eq([ "acme-corp" ])
+      expect(described_class.find_by_retired_host("acme.localhost")).to be_nil
+    end
+
+    it "reserves the old one from other tenants" do
+      tenant.update!(subdomain: "acme-corp")
+
+      other = build(:tenant, subdomain: "acme")
+
+      expect(other).to be_invalid
+      expect(other.errors[:subdomain]).to include("has already been taken")
+    end
+
+    it "leaves other changes alone" do
+      tenant.update!(name: "Acme Corp")
+
+      expect(retired_subdomains).to be_empty
+    end
+  end
+
+  describe ".find_by_retired_host" do
+    let_it_be(:tenant) { create(:tenant, subdomain: "acme") }
+
+    before_all { tenant.update!(subdomain: "acme-corp") }
+
+    it "ignores hosts that aren't a subdomain" do
+      expect(described_class.find_by_retired_host("acme.localhost.evil.com")).to be_nil
+      expect(described_class.find_by_retired_host("deep.acme.localhost")).to be_nil
+    end
+  end
+
   describe "#claim_domain" do
     subject(:domain) { tenant.claim_domain(hostname) }
 
@@ -139,6 +186,51 @@ RSpec.describe Tenant, type: :model do
         expect(domain).not_to be_persisted
         expect(TenantDomains::SyncJob).not_to have_been_enqueued
       end
+    end
+  end
+
+  describe "default identity provider" do
+    let_it_be(:tenant, refind: true) { create(:tenant) }
+    let_it_be(:okta, refind: true) { create(:identity_provider, tenant:) }
+
+    before { tenant.update!(default_identity_provider: okta) }
+
+    context "with another tenant's provider" do
+      let_it_be(:foreign) { create(:identity_provider) }
+
+      it "isn't allowed" do
+        expect(tenant.update(default_identity_provider_id: foreign.id)).to be(false)
+        expect(tenant.errors[:default_identity_provider]).to be_present
+      end
+    end
+
+    context "with a disabled provider" do
+      let_it_be(:disabled) { create(:identity_provider, tenant:, enabled: false) }
+
+      it "isn't allowed" do
+        expect(tenant.update(default_identity_provider_id: disabled.id)).to be(false)
+      end
+    end
+
+    it "is cleared when the provider is disabled" do
+      ActsAsTenant.with_tenant(tenant) { okta.update!(enabled: false) }
+
+      expect(tenant.reload.default_identity_provider_id).to be_nil
+    end
+
+    it "is cleared when the provider is deleted" do
+      ActsAsTenant.with_tenant(tenant) { okta.destroy! }
+
+      expect(tenant.reload.default_identity_provider_id).to be_nil
+    end
+  end
+
+  describe "#oidc_issuer" do
+    let_it_be(:tenant) { create(:tenant, subdomain: "acme") }
+
+    it "is the canonical host on the configured scheme and port" do
+      expect(tenant.oidc_issuer(protocol: "https", root_domain: "locke.app")).to eq("https://acme.locke.app")
+      expect(tenant.oidc_issuer(protocol: "http", port: 3000, root_domain: "localhost")).to eq("http://acme.localhost:3000")
     end
   end
 

@@ -26,6 +26,9 @@ module Auth
 
     # Tenants live at <subdomain>.<root_domain> or on their own custom domain.
     config.x.root_domain = ENV.fetch("APP_ROOT_DOMAIN", "localhost")
+    # How tenants' addresses are reached from outside, for URLs built without a
+    # request to copy them from, such as each tenant's OpenID Connect issuer in a job
+    config.x.public_url_options = { protocol: ENV.fetch("APP_PROTOCOL", "https"), port: ENV["APP_PORT"].presence&.to_i }
 
     # Cloudflare for SaaS verifies tenant custom domains and issues their certificates.
     # Tenants CNAME their domain to cname_target, which points at the zone's fallback origin.

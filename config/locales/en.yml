@@ -36,3 +36,11 @@ en:
         inactive: "Not pointing to us"
         failed: "Failed"
         releasing: "Removing"
+  activerecord:
+    attributes:
+      identity_provider:
+        issuer: "Issuer URL"
+        client_id: "Client ID"
+        idp_entity_id: "Identity provider entity ID"
+        idp_sso_url: "Single sign-on URL"
+        idp_certificate: "Signing certificate"

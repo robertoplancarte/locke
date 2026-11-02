@@ -1,0 +1,68 @@
+<% input_class = "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" %>
+
+<%= form_with model: identity_provider, url: identity_provider.persisted? ? settings_identity_provider_path(identity_provider) : settings_identity_providers_path,
+      class: "mt-8 space-y-6 rounded-lg border border-gray-200 bg-white p-6" do |form| %>
+  <%= render "application/form_errors", record: identity_provider %>
+  <%= form.hidden_field :protocol unless identity_provider.persisted? %>
+
+  <div>
+    <%= form.label :name, "Name", class: "block text-sm font-medium" %>
+    <%= form.text_field :name, required: true, placeholder: "Okta", aria: { describedby: "name_hint" }, class: input_class %>
+    <p id="name_hint" class="mt-1 text-sm text-gray-500">The label of its button on the sign-in page.</p>
+  </div>
+
+  <% if identity_provider.saml? %>
+    <div>
+      <%= form.label :idp_sso_url, "Single sign-on URL", class: "block text-sm font-medium" %>
+      <%= form.url_field :idp_sso_url, placeholder: "https://yourcompany.okta.com/app/…/sso/saml", class: "#{input_class} font-mono" %>
+    </div>
+    <div>
+      <%= form.label :idp_entity_id, "Identity provider entity ID (issuer)", class: "block text-sm font-medium" %>
+      <%= form.text_field :idp_entity_id, placeholder: "http://www.okta.com/…", autocapitalize: "none", spellcheck: false, class: "#{input_class} font-mono" %>
+    </div>
+    <div>
+      <%= form.label :idp_certificate, "Signing certificate", class: "block text-sm font-medium" %>
+      <%= form.text_area :idp_certificate, rows: 6, placeholder: "-----BEGIN CERTIFICATE-----", spellcheck: false, class: "#{input_class} font-mono text-xs" %>
+    </div>
+  <% else %>
+    <div>
+      <%= form.label :issuer, "Issuer URL", class: "block text-sm font-medium" %>
+      <%= form.url_field :issuer, placeholder: "https://yourcompany.okta.com", aria: { describedby: "issuer_hint" }, class: "#{input_class} font-mono" %>
+      <p id="issuer_hint" class="mt-1 text-sm text-gray-500">Its configuration is read from <span class="font-mono">/.well-known/openid-configuration</span> under this URL.</p>
+    </div>
+    <div>
+      <%= form.label :client_id, "Client ID", class: "block text-sm font-medium" %>
+      <%= form.text_field :client_id, autocapitalize: "none", spellcheck: false, class: "#{input_class} font-mono" %>
+    </div>
+    <div>
+      <%= form.label :client_secret, "Client secret", class: "block text-sm font-medium" %>
+      <%= form.password_field :client_secret, value: nil, autocomplete: "off", aria: { describedby: "client_secret_hint" }, class: "#{input_class} font-mono" %>
+      <% if identity_provider.client_secret_in_database.present? %>
+        <p id="client_secret_hint" class="mt-1 text-sm text-gray-500">Saved. Leave blank to keep it.</p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="flex gap-3">
+    <div class="flex h-6 items-center">
+      <%= form.check_box :enabled, aria: { describedby: "enabled_hint" }, class: "size-4 cursor-pointer rounded border-gray-300 accent-brand-primary" %>
+    </div>
+    <div class="text-sm/6">
+      <%= form.label :enabled, "Show on the sign-in page", class: "font-medium text-gray-900" %>
+      <p id="enabled_hint" class="text-gray-500">People can sign in with it. Needs all the details above.</p>
+    </div>
+  </div>
+
+  <div class="flex gap-3">
+    <div class="flex h-6 items-center">
+      <%= form.check_box :creates_users, aria: { describedby: "creates_users_hint" }, class: "size-4 cursor-pointer rounded border-gray-300 accent-brand-primary" %>
+    </div>
+    <div class="text-sm/6">
+      <%= form.label :creates_users, "Create accounts on first sign-in", class: "font-medium text-gray-900" %>
+      <p id="creates_users_hint" class="text-gray-500">People new to <%= current_tenant.name %> get an account the first time they sign in with it. When off, only people who already have an account can use it.</p>
+    </div>
+  </div>
+
+  <%= form.submit identity_provider.persisted? ? "Save provider" : "Add provider",
+        class: "cursor-pointer rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
+<% end %>

@@ -1,0 +1,8 @@
+<% content_for :title, "Sign in · #{current_tenant.name}" %>
+<% content_for :heading, "Sign in to #{current_tenant.name}" %>
+
+<% if @default_identity_provider %>
+  <%= render "sessions/default_identity_provider", identity_provider: @default_identity_provider, redirect: @redirect_to_default %>
+<% else %>
+  <%= render "sessions/local" %>
+<% end %>

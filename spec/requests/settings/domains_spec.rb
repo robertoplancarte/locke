@@ -3,7 +3,12 @@ require "rails_helper"
 RSpec.describe "Settings: domains", type: :request do
   let_it_be(:tenant) { create(:tenant, subdomain: "acme") }
 
-  before { host! "acme.localhost" }
+  let_it_be(:user) { create(:user, tenant:) }
+
+  before do
+    host! "acme.localhost"
+    sign_in_as user
+  end
 
   describe "GET /settings/domains" do
     let_it_be(:domain) do

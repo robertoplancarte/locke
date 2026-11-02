@@ -1,0 +1,26 @@
+<h1>Sign-in providers</h1>
+<p>You can sign in with any of these providers instead of your password.</p>
+
+<div id="identities">
+  <% @identities.each do |identity| %>
+    <div id="<%= dom_id identity %>">
+      <p>
+        <strong><%= identity.label %></strong>
+        linked <%= time_ago_in_words identity.created_at %> ago
+      </p>
+      <%= button_to "Unlink", identity, method: :delete %>
+    </div>
+  <% end %>
+</div>
+
+<% if (providers = linkable_identity_providers).any? %>
+  <br>
+
+  <%= render "identities/link_buttons", providers: %>
+<% end %>
+
+<br>
+
+<div>
+  <%= link_to "Back", root_path %>
+</div>
