@@ -73,6 +73,13 @@ Rails.application.routes.draw do
       resource :sudo, only: [ :new, :create ]
     end
 
+    # OAuth 2.0 and OpenID Connect for apps, one issuer per tenant. Apps are
+    # registered with bin/rails oauth:app:*, so Doorkeeper's management screens are off.
+    use_doorkeeper do
+      skip_controllers :applications, :authorized_applications
+    end
+    use_doorkeeper_openid_connect
+
     root "home#index"
   end
 

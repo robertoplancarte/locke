@@ -74,6 +74,13 @@ class Tenant < ApplicationRecord
   # The tenant's address under the app's root domain, e.g. acme.yourapp.com
   def host(root_domain: Rails.configuration.x.root_domain) = "#{subdomain}.#{root_domain}"
 
+  # The one address the tenant is known by to apps, as its OpenID Connect issuer:
+  # its first verified custom domain if it has one, its subdomain otherwise.
+  # The tenant's other addresses redirect the OIDC endpoints here.
+  def canonical_host(root_domain: Rails.configuration.x.root_domain)
+    domains.active.order(:created_at).pick(:hostname) || host(root_domain:)
+  end
+
   def primary_brand_color = BrandColor.new(primary_color)
   def secondary_brand_color = BrandColor.new(secondary_color)
 

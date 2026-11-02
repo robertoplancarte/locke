@@ -59,6 +59,11 @@ class User < ApplicationRecord
     self.webauthn_id = WebAuthn.generate_user_id
   end
 
+  # The sub claim apps see: random and permanent, unlike the email
+  before_validation on: :create do
+    self.public_id ||= "usr_#{SecureRandom.base58(24)}"
+  end
+
   after_update if: :password_digest_previously_changed? do
     # destroy, not delete: each ending is logged, and apps signed in through it will need telling
     sessions.where.not(id: Current.session).destroy_all
