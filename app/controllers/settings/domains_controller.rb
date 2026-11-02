@@ -3,6 +3,7 @@ module Settings
     def index
       @domains = current_tenant.domains.order(:created_at)
       @domain = TenantDomain.new
+      @tenant = current_tenant
     end
 
     def create
@@ -12,6 +13,7 @@ module Settings
         redirect_to settings_domains_path, notice: "#{@domain.hostname} added. Add the DNS records below to verify it."
       else
         @domains = current_tenant.domains.order(:created_at)
+        @tenant = current_tenant
         render :index, status: :unprocessable_content
       end
     end

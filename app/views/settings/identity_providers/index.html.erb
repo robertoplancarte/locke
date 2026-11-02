@@ -1,0 +1,42 @@
+<% content_for :title, "Identity providers · #{current_tenant.name}" %>
+
+<h1 class="text-2xl font-semibold">Identity providers</h1>
+<p class="mt-1 text-sm text-gray-600">
+  Let people sign in with your organization's own identity provider, like Okta, Microsoft Entra ID or Google Workspace.
+  Someone signing in with a provider for the first time gets an account, or is signed in to the existing account with the same email.
+</p>
+
+<div class="mt-8 flex flex-wrap gap-3">
+  <%= link_to "Add OIDC provider", new_settings_identity_provider_path(protocol: "oidc"),
+        class: "rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
+  <%= link_to "Add SAML provider", new_settings_identity_provider_path(protocol: "saml"),
+        class: "rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50" %>
+</div>
+
+<% if @identity_providers.any? %>
+  <ul class="mt-8 divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+    <% @identity_providers.each do |identity_provider| %>
+      <li id="<%= dom_id(identity_provider) %>" class="flex flex-wrap items-center justify-between gap-4 p-6">
+        <div>
+          <p class="font-medium"><%= identity_provider.name %></p>
+          <div class="mt-1 flex items-center gap-3 text-xs">
+            <span class="rounded bg-gray-100 px-2 py-0.5 font-medium text-gray-700 uppercase"><%= identity_provider.protocol %></span>
+            <% if identity_provider.enabled? %>
+              <span class="rounded bg-green-50 px-2 py-0.5 font-medium text-green-700">On the sign-in page</span>
+            <% else %>
+              <span class="rounded bg-yellow-50 px-2 py-0.5 font-medium text-yellow-800">Off</span>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <%= link_to "Edit", edit_settings_identity_provider_path(identity_provider),
+                class: "rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50" %>
+          <%= button_to "Remove", settings_identity_provider_path(identity_provider), method: :delete,
+                form: { data: { turbo_confirm: "Remove #{identity_provider.name}? People will no longer be able to sign in with it." } },
+                class: "cursor-pointer rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50" %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

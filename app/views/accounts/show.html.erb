@@ -1,0 +1,14 @@
+<% content_for :title, "Account · #{current_tenant.name}" %>
+
+<%= render layout: "accounts/section", locals: { title: "Profile", description: "How you appear to others in #{current_tenant.name}." } do %>
+  <%= render "accounts/preference", field: "name", label: "Full name", value: @user.name_in_database || tag.span("Not set", class: "text-gray-500") %>
+  <%= render "accounts/row", label: "Email address", value: @user.email, action: "Update", path: edit_identity_email_path %>
+<% end %>
+
+<%= render layout: "accounts/section", locals: { title: "Time and appearance", description: "When times are shown in, and how the app looks for you." } do %>
+  <%= render "accounts/preference", field: "time_zone", label: "Time zone", value: time_zone_label(@user.time_zone_in_database) %>
+  <%= render "accounts/preference", field: "theme", label: "Theme", value: theme_options[@user.theme_in_database] %>
+<% end %>
+
+<%= button_to "Log out", Current.session, method: :delete,
+      class: "cursor-pointer text-sm/6 font-semibold text-gray-700 hover:text-gray-900" %>

@@ -3,7 +3,12 @@ require "rails_helper"
 RSpec.describe "Settings: branding", type: :request do
   let_it_be(:tenant) { create(:tenant, subdomain: "acme", name: "Acme", primary_color: "#DC2626") }
 
-  before { host! "acme.localhost" }
+  let_it_be(:user) { create(:user, tenant:) }
+
+  before do
+    host! "acme.localhost"
+    sign_in_as user
+  end
 
   describe "GET /settings/branding/edit" do
     it "renders the form in the tenant's brand" do

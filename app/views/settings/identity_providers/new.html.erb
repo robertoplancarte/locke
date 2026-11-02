@@ -1,0 +1,9 @@
+<% content_for :title, "Add #{@identity_provider.protocol.upcase} provider · #{current_tenant.name}" %>
+
+<h1 class="text-2xl font-semibold">Add <%= @identity_provider.protocol.upcase %> provider</h1>
+<p class="mt-1 text-sm text-gray-600">
+  Once it's saved you'll get the <%= @identity_provider.saml? ? "service provider details" : "redirect URL" %> to set up in your identity provider.
+  You can fill in the rest and turn it on then.
+</p>
+
+<%= render "form", identity_provider: @identity_provider %>

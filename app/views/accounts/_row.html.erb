@@ -1,0 +1,10 @@
+<%# A label, its value, and an optional action on the right %>
+<div class="py-6 sm:flex">
+  <dt class="font-medium text-gray-900 sm:w-48 sm:flex-none sm:pr-6"><%= label %></dt>
+  <dd class="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto">
+    <div class="text-gray-700"><%= value %></div>
+    <% if local_assigns[:action] %>
+      <%= link_to action, path, class: "shrink-0 font-semibold text-brand-primary-text hover:opacity-80" %>
+    <% end %>
+  </dd>
+</div>

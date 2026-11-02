@@ -1,0 +1,21 @@
+
+<h1>Send invitation</h1>
+
+<%= form_with(url: invitation_path) do |form| %>
+  <%= render "application/form_errors", record: @user %>
+
+  <div>
+    <%= form.label :email, style: "display: block" %>
+    <%= form.email_field :email, required: true, autofocus: true %>
+  </div>
+
+  <div>
+    <%= form.submit "Send an invitation" %>
+  </div>
+<% end %>
+
+<br>
+
+<div>
+  <%= link_to "Back", root_path %>
+</div>
