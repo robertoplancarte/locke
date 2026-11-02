@@ -1,5 +1,7 @@
 class Session < ApplicationRecord
   belongs_to :user
+  # The external provider the user signed in with, if any
+  belongs_to :identity_provider, optional: true
 
   encrypts :user_agent, :ip_address
 
@@ -8,6 +10,7 @@ class Session < ApplicationRecord
     self.ip_address = Current.ip_address
 
     self.sudo_at = Time.current
+    self.authenticated_at ||= Time.current
   end
 
   after_create  { user.events.create! action: "signed_in" }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_02_090100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -79,6 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_150000) do
     t.text "idp_certificate"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "creates_users", default: true, null: false
     t.index ["tenant_id"], name: "index_identity_providers_on_tenant_id"
   end
 
@@ -119,6 +120,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_150000) do
     t.datetime "sudo_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "authenticated_at", null: false
+    t.string "amr", default: [], null: false, array: true
+    t.bigint "identity_provider_id"
+    t.index ["identity_provider_id"], name: "index_sessions_on_identity_provider_id"
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
@@ -188,6 +193,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_150000) do
   add_foreign_key "recovery_codes", "users"
   add_foreign_key "retired_subdomains", "tenants"
   add_foreign_key "security_keys", "users"
+  add_foreign_key "sessions", "identity_providers", on_delete: :nullify
   add_foreign_key "sessions", "users"
   add_foreign_key "sign_in_tokens", "users"
   add_foreign_key "tenant_domains", "tenants"

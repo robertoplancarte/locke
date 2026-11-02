@@ -88,7 +88,9 @@ RSpec.describe "Two-factor authentication: security keys", type: :request do
     it "doesn't accept the same assertion twice" do
       assertion = assertion_for(authenticator)
       submit assertion
+      # Signing in again starts a new challenge the old assertion didn't answer
       user.sessions.delete_all
+      sign_in_as user
 
       submit assertion
 

@@ -44,7 +44,7 @@ module Settings
 
     # The protocol is chosen once; a blank secret keeps the saved one, which is never shown again
     def identity_provider_params
-      permitted = %i[name enabled issuer client_id client_secret idp_entity_id idp_sso_url idp_certificate]
+      permitted = %i[name enabled creates_users issuer client_id client_secret idp_entity_id idp_sso_url idp_certificate]
       permitted << :protocol unless @identity_provider&.persisted?
 
       params.expect(identity_provider: permitted).tap do |attributes|

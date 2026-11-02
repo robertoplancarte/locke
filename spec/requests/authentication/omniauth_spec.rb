@@ -28,6 +28,22 @@ RSpec.describe "Authentication: signing in with a provider", type: :request do
     expect(response).to redirect_to(root_path)
   end
 
+  it "doesn't sign up a new email when the tenant turned sign-ups off" do
+    tenant.update!(sign_up_enabled: false)
+
+    expect { callback }.not_to change { users.count }
+    expect(response).to redirect_to(sign_in_path)
+  end
+
+  it "still signs in existing accounts when the tenant turned sign-ups off" do
+    tenant.update!(sign_up_enabled: false)
+    user = create(:user, tenant:, email: "ada@example.com")
+
+    callback
+
+    expect(user.sessions).to exist
+  end
+
   it "remembers the provider account's email, and keeps it current" do
     user = create(:user, tenant:, email: "ada@example.com")
     identity = create(:identity, user:, uid: "ada-uid", email: "old@example.com")

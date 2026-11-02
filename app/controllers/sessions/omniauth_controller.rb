@@ -1,10 +1,13 @@
 class Sessions::OmniauthController < ApplicationController
+  include SignsIn
+
   skip_before_action :verify_authenticity_token
   skip_before_action :authenticate
 
   before_action :set_identity_provider
   before_action :require_social_sign_in_enabled, unless: :identity_provider
   before_action :require_verified_email
+  before_action :restore_return_to, if: -> { identity_provider&.saml? }
 
   # Matching accounts by email is only safe because every configured provider
   # verifies the emails it returns; otherwise anyone could claim an account by asserting its email.
@@ -20,10 +23,12 @@ class Sessions::OmniauthController < ApplicationController
     elsif session_record = find_session_record
       identity = session_record.user.identities.create!(identity_params)
       redirect_to identities_path, notice: "#{identity.label} is now linked to your account"
-    else
+    elsif creates_users?
       user = User.new(user_params)
       user.identities.build(identity_params)
       sign_in user
+    else
+      redirect_to sign_in_path, alert: "#{current_tenant.name} isn't accepting sign-ups. Ask for an invitation."
     end
   end
 
@@ -50,13 +55,23 @@ class Sessions::OmniauthController < ApplicationController
 
     def sign_in(user)
       if user.save
-        session_record = user.sessions.create!
-        cookies.signed.permanent[:session_token] = { value: session_record.id, httponly: true }
-
-        redirect_to root_path, notice: "Signed in successfully"
+        begin_sign_in SignIn.new(user, method: :fed, identity_provider:)
       else
         redirect_to sign_in_path, alert: "Authentication failed"
       end
+    end
+
+    # A tenant's own provider has its own switch, as tenants that turn sign-ups off
+    # often still want their provider to create accounts; the app's providers follow sign-ups.
+    def creates_users?
+      identity_provider ? identity_provider.creates_users? : current_tenant.sign_up_enabled?
+    end
+
+    # A SAML provider posts back cross-site, so the browser leaves out the Lax session
+    # cookie holding return_to; the sign-in page sent it along as RelayState instead.
+    # It's checked for being a local path before it's used.
+    def restore_return_to
+      session[:return_to] ||= params[:RelayState].presence
     end
 
     def user_params

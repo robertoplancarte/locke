@@ -42,6 +42,19 @@ RSpec.describe "Authentication: signing in with a tenant's identity provider", t
       expect(identities_of(user)).to eq([ [ okta, "ada-sub" ] ])
     end
 
+    it "creates accounts for new people, even with sign-ups off" do
+      tenant.update!(sign_up_enabled: false)
+
+      expect { callback }.to change { ActsAsTenant.with_tenant(tenant) { User.count } }.by(1)
+    end
+
+    it "doesn't create accounts when the provider is set not to" do
+      ActsAsTenant.with_tenant(tenant) { okta.update!(creates_users: false) }
+
+      expect { callback }.not_to change { ActsAsTenant.with_tenant(tenant) { User.count } }
+      expect(response).to redirect_to(sign_in_path)
+    end
+
     it "keeps the same uid from different providers apart" do
       user = create(:user, tenant:, email: "ada@example.com")
       entra = create(:identity_provider, tenant:)

@@ -53,6 +53,16 @@
     </div>
   </div>
 
+  <div class="flex gap-3">
+    <div class="flex h-6 items-center">
+      <%= form.check_box :creates_users, aria: { describedby: "creates_users_hint" }, class: "size-4 cursor-pointer rounded border-gray-300 accent-brand-primary" %>
+    </div>
+    <div class="text-sm/6">
+      <%= form.label :creates_users, "Create accounts on first sign-in", class: "font-medium text-gray-900" %>
+      <p id="creates_users_hint" class="text-gray-500">People new to <%= current_tenant.name %> get an account the first time they sign in with it. When off, only people who already have an account can use it.</p>
+    </div>
+  </div>
+
   <%= form.submit identity_provider.persisted? ? "Save provider" : "Add provider",
         class: "cursor-pointer rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
 <% end %>

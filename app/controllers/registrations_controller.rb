@@ -1,4 +1,6 @@
 class RegistrationsController < ApplicationController
+  include SignsIn
+
   skip_before_action :authenticate
 
   layout "authentication"
@@ -13,11 +15,8 @@ class RegistrationsController < ApplicationController
     @user = User.new(user_params)
 
     if @user.save
-      session_record = @user.sessions.create!
-      cookies.signed.permanent[:session_token] = { value: session_record.id, httponly: true }
-
       send_email_verification
-      redirect_to root_path, notice: "Welcome! You have signed up successfully"
+      redirect_to complete_sign_in(SignIn.new(@user, method: :pwd)), notice: "Welcome! You have signed up successfully"
     else
       render :new, status: :unprocessable_entity
     end
