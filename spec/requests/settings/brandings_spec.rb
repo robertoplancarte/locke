@@ -47,6 +47,42 @@ RSpec.describe "Settings: branding", type: :request do
       end
     end
 
+    context "with a favicon" do
+      let(:attributes) { { favicon: fixture_file_upload("square_icon.png", "image/png") } }
+
+      it "saves it" do
+        update_branding
+
+        expect(response).to redirect_to(edit_settings_branding_path)
+        expect(tenant.reload.favicon).to be_attached
+      end
+    end
+
+    context "with a non-image favicon" do
+      let(:attributes) { { favicon: fixture_file_upload("saml_idp_certificate.pem", "application/x-pem-file") } }
+
+      it "re-renders the form without saving it" do
+        update_branding
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("Favicon must be a PNG, JPEG or WebP image")
+        expect(tenant.reload.favicon).not_to be_attached
+      end
+    end
+
+    context "when removing the favicon" do
+      let(:attributes) { { remove_favicon: "1" } }
+
+      before { tenant.favicon.attach(fixture_file_upload("square_icon.png", "image/png")) }
+
+      it "detaches it" do
+        update_branding
+
+        expect(response).to redirect_to(edit_settings_branding_path)
+        expect(tenant.reload.favicon).not_to be_attached
+      end
+    end
+
     context "when removing the logo" do
       let(:attributes) { { remove_logo: "1" } }
 

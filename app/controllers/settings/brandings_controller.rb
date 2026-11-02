@@ -8,6 +8,7 @@ module Settings
     def update
       attributes = branding_params
       @tenant.logo = nil if attributes.delete(:remove_logo) == "1"
+      @tenant.favicon = nil if attributes.delete(:remove_favicon) == "1"
 
       if @tenant.update(attributes)
         redirect_to edit_settings_branding_path, notice: "Branding saved."
@@ -24,7 +25,7 @@ module Settings
     end
 
     def branding_params
-      params.expect(tenant: %i[name primary_color secondary_color logo remove_logo])
+      params.expect(tenant: %i[name primary_color secondary_color logo remove_logo favicon remove_favicon])
     end
   end
 end

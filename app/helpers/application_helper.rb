@@ -14,6 +14,23 @@ module ApplicationHelper
     tag.style(":root { #{variables.map { |name, value| "#{name}: #{value};" }.join(" ")} }", nonce: content_security_policy_nonce)
   end
 
+  # The tenant's favicon (or logo) resized for browser tabs and home screens,
+  # or Locke's own icons (public/icon.*) when there's no tenant or it has neither
+  def favicon_link_tags(tenant = current_tenant)
+    if (image = tenant&.icon_image)
+      safe_join([
+        tag.link(rel: "icon", href: url_for(image.variant(:favicon)), type: "image/png", sizes: "32x32"),
+        tag.link(rel: "apple-touch-icon", href: url_for(image.variant(:apple_touch_icon)), sizes: "180x180")
+      ], "\n")
+    else
+      safe_join([
+        tag.link(rel: "icon", href: "/icon.png", type: "image/png"),
+        tag.link(rel: "icon", href: "/icon.svg", type: "image/svg+xml"),
+        tag.link(rel: "apple-touch-icon", href: "/icon.png")
+      ], "\n")
+    end
+  end
+
   # The signed-in user's theme; signed-out pages follow the device
   def current_theme = Current.user&.theme || "system"
 

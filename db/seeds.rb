@@ -26,7 +26,7 @@ end
 
 # Development users, all with the password "password". It fails the length and
 # breached-password validations, so they're saved without validation; that skips
-# the before_validation callbacks too, so the OTP secret and WebAuthn ID are set here.
+# the before_validation callbacks too, so the OTP secret, WebAuthn ID and public ID are set here.
 # alice@example.com exists on both tenants as two separate accounts.
 if Rails.env.development?
   {
@@ -44,7 +44,8 @@ if Rails.env.development?
           password: "password",
           verified: true,
           otp_secret: ROTP::Base32.random,
-          webauthn_id: WebAuthn.generate_user_id
+          webauthn_id: WebAuthn.generate_user_id,
+          public_id: "usr_#{SecureRandom.base58(24)}"
         ).save!(validate: false)
       end
     end

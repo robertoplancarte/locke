@@ -6,6 +6,14 @@ class Tenant < ApplicationRecord
   # No SVG: Active Storage serves it as a download (it can carry scripts), so it wouldn't render
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_SIZE = 2.megabytes
+  # Square PNGs for browser tabs and home screens, padded with transparency rather
+  # than cropped so nothing of a wide logo is cut off. iOS shows transparency as
+  # black, so the home-screen icon is then flattened onto white. Padding first gives
+  # every image an alpha channel, which flatten needs.
+  ICON_VARIANTS = {
+    favicon: { resize_and_pad: [ 32, 32, { alpha: true } ], format: :png },
+    apple_touch_icon: { resize_and_pad: [ 180, 180, { alpha: true } ], flatten: { background: [ 255, 255, 255 ] }, format: :png }
+  }.freeze
 
   has_many :domains, class_name: "TenantDomain", dependent: :restrict_with_error
   has_many :users, dependent: :restrict_with_error
@@ -15,7 +23,13 @@ class Tenant < ApplicationRecord
   # Where the sign-in page sends people straight away; nil shows Locke's own form
   belongs_to :default_identity_provider, class_name: "IdentityProvider", optional: true
   has_many :retired_subdomains, dependent: :delete_all
-  has_one_attached :logo
+  has_one_attached :logo do |attachable|
+    ICON_VARIANTS.each { |name, transformations| attachable.variant(name, **transformations) }
+  end
+  # Optional square version of the logo for the icons; the logo is used without one
+  has_one_attached :favicon do |attachable|
+    ICON_VARIANTS.each { |name, transformations| attachable.variant(name, **transformations) }
+  end
 
   # off: nobody can set up 2FA; optional: users choose; required: users must set it up before using the app.
   # Users who already set it up keep being challenged either way.
@@ -29,7 +43,7 @@ class Tenant < ApplicationRecord
     format: { with: SUBDOMAIN_FORMAT, message: "may only contain lowercase letters, numbers and hyphens" },
     exclusion: { in: RESERVED_SUBDOMAINS, message: "is reserved" }
   validates :primary_color, :secondary_color, format: { with: HEX_COLOR_FORMAT, message: "must be a hex color like #1A2B3C" }
-  validate :logo_is_an_acceptable_image
+  validate :logo_and_favicon_are_acceptable_images
   validate :subdomain_not_retired_by_another_tenant, if: :subdomain_changed?
   validate :default_identity_provider_is_usable, if: :default_identity_provider_id_changed?
 
@@ -92,6 +106,9 @@ class Tenant < ApplicationRecord
   def primary_brand_color = BrandColor.new(primary_color)
   def secondary_brand_color = BrandColor.new(secondary_color)
 
+  # The image the browser and home-screen icons are made from, if any
+  def icon_image = [ favicon, logo ].find(&:attached?)
+
   private
 
   def subdomain_not_retired_by_another_tenant
@@ -106,10 +123,12 @@ class Tenant < ApplicationRecord
     errors.add(:default_identity_provider, "must be one of your enabled providers") unless provider&.tenant_id == id && provider.enabled?
   end
 
-  def logo_is_an_acceptable_image
-    return unless logo.attached?
+  def logo_and_favicon_are_acceptable_images
+    { logo:, favicon: }.each do |name, image|
+      next unless image.attached?
 
-    errors.add(:logo, "must be a PNG, JPEG or WebP image") unless logo.content_type.in?(LOGO_CONTENT_TYPES)
-    errors.add(:logo, "must be smaller than 2 MB") if logo.byte_size > LOGO_MAX_SIZE
+      errors.add(name, "must be a PNG, JPEG or WebP image") unless image.content_type.in?(LOGO_CONTENT_TYPES)
+      errors.add(name, "must be smaller than 2 MB") if image.byte_size > LOGO_MAX_SIZE
+    end
   end
 end
