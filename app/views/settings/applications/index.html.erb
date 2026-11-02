@@ -1,0 +1,36 @@
+<% content_for :title, "Apps · #{current_tenant.name}" %>
+
+<h1 class="text-2xl font-semibold">Apps</h1>
+<p class="mt-1 text-sm text-gray-600">
+  Let your own apps sign people in with <%= current_tenant.name %> over OpenID Connect.
+  Each app gets a client ID and secret, and works only on this workspace.
+</p>
+
+<div class="mt-8">
+  <%= link_to "Register an app", new_settings_application_path,
+        class: "rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
+</div>
+
+<% if @applications.any? %>
+  <ul class="mt-8 divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+    <% @applications.each do |application| %>
+      <li id="<%= dom_id(application) %>" class="flex flex-wrap items-center justify-between gap-4 p-6">
+        <div class="min-w-0">
+          <%= link_to application.name, settings_application_path(application), class: "font-medium hover:underline" %>
+          <div class="mt-1 flex flex-wrap items-center gap-3 text-xs">
+            <span class="font-mono break-all text-gray-500"><%= application.uid %></span>
+            <span class="rounded bg-gray-100 px-2 py-0.5 font-medium text-gray-700"><%= application.confidential? ? "Confidential" : "Public" %></span>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <%= link_to "Edit", edit_settings_application_path(application),
+                class: "rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50" %>
+          <%= button_to "Remove", settings_application_path(application), method: :delete,
+                form: { data: { turbo_confirm: "Remove #{application.name}? Everyone signed in to it through #{current_tenant.name} will be signed out." } },
+                class: "cursor-pointer rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50" %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

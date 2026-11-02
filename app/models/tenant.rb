@@ -10,6 +10,8 @@ class Tenant < ApplicationRecord
   has_many :domains, class_name: "TenantDomain", dependent: :restrict_with_error
   has_many :users, dependent: :restrict_with_error
   has_many :identity_providers, dependent: :destroy
+  # Only the tenant's own apps; global ones (no tenant) aren't any tenant's to manage
+  has_many :oauth_applications, dependent: :destroy
   # Where the sign-in page sends people straight away; nil shows Locke's own form
   belongs_to :default_identity_provider, class_name: "IdentityProvider", optional: true
   has_many :retired_subdomains, dependent: :delete_all

@@ -1,0 +1,8 @@
+<% content_for :title, "Register an app · #{current_tenant.name}" %>
+
+<h1 class="text-2xl font-semibold">Register an app</h1>
+<p class="mt-1 text-sm text-gray-600">
+  Once it's registered you'll get its client ID and secret, and the details to set up OpenID Connect in the app.
+</p>
+
+<%= render "form", application: @application %>

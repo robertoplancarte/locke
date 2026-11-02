@@ -21,6 +21,11 @@ Rails.application.routes.draw do
         resource :check, only: :create, module: :domains
       end
       resources :identity_providers, except: :show
+      # The tenant's own OIDC apps. Locke's pages, not Doorkeeper's: those would
+      # also list and change the global apps every tenant shares.
+      resources :applications do
+        resource :secret, only: :create, module: :applications
+      end
     end
 
     # Accounts belong to one tenant, so authentication only exists on tenant hosts
@@ -73,8 +78,9 @@ Rails.application.routes.draw do
       resource :sudo, only: [ :new, :create ]
     end
 
-    # OAuth 2.0 and OpenID Connect for apps, one issuer per tenant. Apps are
-    # registered with bin/rails oauth:app:*, so Doorkeeper's management screens are off.
+    # OAuth 2.0 and OpenID Connect for apps, one issuer per tenant. Tenants register
+    # their apps under Settings, and global apps with bin/rails oauth:app:global, so
+    # Doorkeeper's management screens are off.
     use_doorkeeper do
       skip_controllers :applications, :authorized_applications
       controllers authorizations: "oauth/authorizations"

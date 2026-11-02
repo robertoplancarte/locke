@@ -1,0 +1,49 @@
+<% input_class = "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" %>
+
+<%= form_with model: application, url: application.persisted? ? settings_application_path(application) : settings_applications_path,
+      class: "mt-8 space-y-6 rounded-lg border border-gray-200 bg-white p-6" do |form| %>
+  <%= render "application/form_errors", record: application %>
+
+  <div>
+    <%= form.label :name, "Name", class: "block text-sm font-medium" %>
+    <%= form.text_field :name, required: true, placeholder: "Intranet", aria: { describedby: "name_hint" }, class: input_class %>
+    <p id="name_hint" class="mt-1 text-sm text-gray-500">For you to tell your apps apart.</p>
+  </div>
+
+  <div>
+    <%= form.label :redirect_uri, "Redirect URIs", class: "block text-sm font-medium" %>
+    <%= form.text_area :redirect_uri, rows: 3, required: true, placeholder: "https://app.yourcompany.com/auth/callback",
+          autocapitalize: "none", spellcheck: false, aria: { describedby: "redirect_uri_hint" }, class: "#{input_class} font-mono text-sm" %>
+    <p id="redirect_uri_hint" class="mt-1 text-sm text-gray-500">One per line. Where people return to after signing in; only an exact match is accepted.</p>
+  </div>
+
+  <div class="flex gap-3">
+    <div class="flex h-6 items-center">
+      <%= form.check_box :confidential, aria: { describedby: "confidential_hint" }, class: "size-4 cursor-pointer rounded border-gray-300 accent-brand-primary" %>
+    </div>
+    <div class="text-sm/6">
+      <%= form.label :confidential, "Confidential client", class: "font-medium text-gray-900" %>
+      <p id="confidential_hint" class="text-gray-500">
+        It runs on a server that can keep a client secret. Turn it off for single-page and mobile apps, which sign in with PKCE alone.
+      </p>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :backchannel_logout_uri, "Back-channel logout URI", class: "block text-sm font-medium" %>
+    <%= form.url_field :backchannel_logout_uri, placeholder: "https://app.yourcompany.com/auth/backchannel_logout",
+          aria: { describedby: "backchannel_logout_uri_hint" }, class: "#{input_class} font-mono text-sm" %>
+    <p id="backchannel_logout_uri_hint" class="mt-1 text-sm text-gray-500">Optional. Where <%= current_tenant.name %> tells the app that someone logged out, so it ends their session too.</p>
+  </div>
+
+  <div>
+    <%= form.label :post_logout_redirect_uris, "Post-logout redirect URIs", class: "block text-sm font-medium" %>
+    <%= form.text_area :post_logout_redirect_uris, value: application.post_logout_redirect_uris.join("\n"), rows: 2,
+          placeholder: "https://app.yourcompany.com/signed_out", autocapitalize: "none", spellcheck: false,
+          aria: { describedby: "post_logout_redirect_uris_hint" }, class: "#{input_class} font-mono text-sm" %>
+    <p id="post_logout_redirect_uris_hint" class="mt-1 text-sm text-gray-500">Optional, one per line. Where the app may send people after they log out.</p>
+  </div>
+
+  <%= form.submit application.persisted? ? "Save app" : "Register app",
+        class: "cursor-pointer rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
+<% end %>

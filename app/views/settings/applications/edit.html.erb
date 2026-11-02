@@ -1,0 +1,8 @@
+<% content_for :title, "#{@application.name_was} · #{current_tenant.name}" %>
+
+<h1 class="text-2xl font-semibold"><%= @application.name_was %></h1>
+<p class="mt-1 text-sm text-gray-600">
+  <%= link_to "Apps", settings_applications_path, class: "underline" %>
+</p>
+
+<%= render "form", application: @application %>
