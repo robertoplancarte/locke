@@ -107,6 +107,70 @@ RSpec.describe "Authentication: signing in with a provider", type: :request do
     end
   end
 
+  context "when linking from settings" do
+    let_it_be(:user) { create(:user, tenant:, email: "grace@example.com") }
+
+    # Starts at the request phase, as the settings page's button does, so link=1 comes back as omniauth.params
+    subject(:link) do
+      post "/auth/developer", params: { link: 1 }
+      follow_redirect!
+    end
+
+    before { sign_in_as user }
+
+    it "links the identity to the signed in user and says so" do
+      expect { link }.not_to change { users.count }
+
+      identity = ActsAsTenant.with_tenant(tenant) { user.identities.sole }
+      expect(identity).to have_attributes(provider: "developer", uid: "ada-uid", email: "ada@example.com")
+      expect(response).to redirect_to(linked_identity_path(identity))
+
+      follow_redirect!
+      expect(response.body).to include("Your Developer account is linked", "You can close this tab now", account_security_path)
+    end
+
+    it "links to the signed in user even when another account has the identity's email" do
+      ada = create(:user, tenant:, email: "ada@example.com")
+
+      link
+
+      expect(identities_of(user)).to eq([ [ "developer", "ada-uid" ] ])
+      expect(identities_of(ada)).to be_empty
+    end
+
+    it "doesn't start a new session" do
+      expect { link }.not_to change { ActsAsTenant.with_tenant(tenant) { user.sessions.count } }
+    end
+
+    it "says it's linked when it already was" do
+      identity = create(:identity, user:, uid: "ada-uid")
+
+      expect { link }.not_to change { ActsAsTenant.with_tenant(tenant) { Identity.count } }
+
+      expect(response).to redirect_to(linked_identity_path(identity))
+    end
+
+    it "doesn't take the identity from another user" do
+      other = create(:user, tenant:)
+      create(:identity, user: other, uid: "ada-uid")
+
+      link
+
+      expect(identities_of(other)).to eq([ [ "developer", "ada-uid" ] ])
+      expect(identities_of(user)).to be_empty
+      expect(response).to redirect_to(account_security_path)
+    end
+
+    it "asks to sign in again when the session ended" do
+      delete session_path(ActsAsTenant.with_tenant(tenant) { user.sessions.last })
+
+      link
+
+      expect(identities_of(user)).to be_empty
+      expect(response).to redirect_to(sign_in_path)
+    end
+  end
+
   it "doesn't link an account with the same email on another tenant" do
     other = create(:user, email: "ada@example.com")
 

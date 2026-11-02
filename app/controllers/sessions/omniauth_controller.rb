@@ -14,6 +14,8 @@ class Sessions::OmniauthController < ApplicationController
   # verifies the emails it returns; otherwise anyone could claim an account by asserting its email.
   # Providers a tenant registers are trusted with its own accounts, as the tenant chose them.
   def create
+    return link if linking?
+
     if identity = Identity.find_by(omniauth_params)
       identity.update!(email: omniauth.info.email)
       sign_in identity.user
@@ -39,6 +41,28 @@ class Sessions::OmniauthController < ApplicationController
 
   private
     attr_reader :identity_provider
+
+    # The settings page asks for linking (link=1), opening the provider in a new tab
+    def linking?
+      request.env["omniauth.params"].to_h["link"] == "1"
+    end
+
+    # Links the provider account to the signed-in user, whatever its email, as they asked for it.
+    # The tab then says it's linked instead of signing in again.
+    def link
+      unless user = find_session_record&.user
+        session[:return_to] = account_security_path
+        return redirect_to sign_in_path, alert: "Sign in again to link your account"
+      end
+
+      identity = Identity.find_or_initialize_by(omniauth_params)
+      if identity.persisted? && identity.user != user
+        redirect_to account_security_path, alert: "That #{identity.provider_name} account is already linked to someone else"
+      else
+        identity.update!(user:, email: omniauth.info.email)
+        redirect_to linked_identity_path(identity)
+      end
+    end
 
     # Tenant-scoped, so a callback can't use another tenant's provider
     def set_identity_provider

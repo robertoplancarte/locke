@@ -5,6 +5,11 @@ class IdentitiesController < ApplicationController
     @identities = @user.identities.includes(:identity_provider).order(:created_at)
   end
 
+  # Where linking a provider in a new tab ends
+  def linked
+    @identity = @user.identities.find(params[:id])
+  end
+
   def destroy
     @identity = @user.identities.find(params[:id])
     @identity.destroy

@@ -36,7 +36,9 @@ Rails.application.routes.draw do
         resource :activity, only: :show
       end
     end
-    resources :identities, only: [ :index, :destroy ]
+    resources :identities, only: [ :index, :destroy ] do
+      get :linked, on: :member
+    end
     namespace :identity do
       resource :email,              only: [ :edit, :update ]
       resource :email_verification, only: [ :show, :create ]

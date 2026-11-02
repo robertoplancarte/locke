@@ -13,13 +13,10 @@
   <% end %>
 </div>
 
-<%# Mirrors the providers in config/initializers/omniauth.rb %>
-<% if current_tenant.social_sign_in_enabled? && !Rails.env.production? %>
+<% if (providers = linkable_identity_providers).any? %>
   <br>
 
-  <div>
-    <%= button_to "Link Developer", "/auth/developer", data: { turbo: false } %>
-  </div>
+  <%= render "identities/link_buttons", providers: %>
 <% end %>
 
 <br>
