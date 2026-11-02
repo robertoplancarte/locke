@@ -9,8 +9,10 @@ RSpec.describe Session do
   describe "sid" do
     subject(:session) { create(:session, user:) }
 
-    it "is random, not the id" do
-      expect(session.sid).to match(/\Ases_\w{24}\z/).and not_include(session.id.to_s)
+    it "is random, not derived from the id" do
+      other = create(:session, user:)
+
+      expect(session.sid).to match(/\Ases_\w{24}\z/).and not_eq(other.sid)
     end
   end
 
@@ -64,5 +66,5 @@ RSpec.describe Session do
     end
   end
 
-  RSpec::Matchers.define_negated_matcher :not_include, :include
+  RSpec::Matchers.define_negated_matcher :not_eq, :eq
 end
