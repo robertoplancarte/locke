@@ -1,0 +1,13 @@
+<% content_for :title, "Account linked · #{current_tenant.name}" %>
+
+<%# Where a provider's sign-in ends when it was opened from settings to link an account %>
+<div class="mx-auto max-w-md text-center">
+  <h1 class="text-2xl/9 font-bold tracking-tight text-gray-900">Your <%= @identity.provider_name %> account is linked</h1>
+  <p class="mt-4 text-sm/6 text-gray-600">
+    You can now sign in to <%= current_tenant.name %> with <%= @identity.label %>.
+  </p>
+  <p class="mt-2 text-sm/6 text-gray-600">You can close this tab now.</p>
+  <p class="mt-6 text-sm/6">
+    <%= link_to "Back to your settings", account_security_path, class: "font-semibold text-brand-primary-text hover:opacity-80" %>
+  </p>
+</div>

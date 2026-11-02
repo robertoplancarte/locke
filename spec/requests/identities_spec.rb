@@ -20,6 +20,25 @@ RSpec.describe "Identities", type: :request do
     end
   end
 
+  describe "GET /identities/:id/linked" do
+    it "says the provider account is linked, with a way back to settings" do
+      identity = create(:identity, user:, provider: "github", email: "ada@example.com")
+
+      get linked_identity_path(identity)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Your Github account is linked", "Github (ada@example.com)", "You can close this tab now", account_security_path)
+    end
+
+    it "doesn't show another user's provider" do
+      identity = create(:identity, user: create(:user, tenant:))
+
+      get linked_identity_path(identity)
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe "DELETE /identities/:id" do
     it "unlinks the provider" do
       identity = create(:identity, user:, provider: "github")

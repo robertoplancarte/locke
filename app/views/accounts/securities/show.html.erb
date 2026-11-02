@@ -24,6 +24,9 @@
   <% if @user.identities.none? %>
     <li class="py-6 text-gray-500">None linked yet.</li>
   <% end %>
+  <% if (providers = linkable_identity_providers).any? %>
+    <li class="py-6"><%= render "identities/link_buttons", providers: %></li>
+  <% end %>
 <% end %>
 
 <%= render layout: "accounts/section", locals: { title: "Two-factor authentication", description: "A second step after your password, so a stolen password isn't enough." } do %>
