@@ -11,17 +11,18 @@ class Sessions::OmniauthController < ApplicationController
   # Providers a tenant registers are trusted with its own accounts, as the tenant chose them.
   def create
     if identity = Identity.find_by(omniauth_params)
+      identity.update!(email: omniauth.info.email)
       sign_in identity.user
     elsif user = User.find_by(email: omniauth.info.email)
       user.verified = true
-      user.identities.build(omniauth_params)
+      user.identities.build(identity_params)
       sign_in user
     elsif session_record = find_session_record
-      identity = session_record.user.identities.create!(omniauth_params)
-      redirect_to identities_path, notice: "#{identity.provider_name} is now linked to your account"
+      identity = session_record.user.identities.create!(identity_params)
+      redirect_to identities_path, notice: "#{identity.label} is now linked to your account"
     else
       user = User.new(user_params)
-      user.identities.build(omniauth_params)
+      user.identities.build(identity_params)
       sign_in user
     end
   end
@@ -62,8 +63,13 @@ class Sessions::OmniauthController < ApplicationController
       { email: omniauth.info.email, password: SecureRandom.base58, verified: true }
     end
 
+    # What identifies the provider account
     def omniauth_params
       { provider: omniauth.provider, uid: omniauth.uid, identity_provider: }
+    end
+
+    def identity_params
+      omniauth_params.merge(email: omniauth.info.email)
     end
 
     def omniauth

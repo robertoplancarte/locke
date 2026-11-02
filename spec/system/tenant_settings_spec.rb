@@ -46,6 +46,19 @@ RSpec.describe "Tenant settings", type: :system do
     expect(page).to have_button("Sign in")
   end
 
+  it "switches to the dark theme" do
+    visit "/account"
+
+    within("#preference_theme") { click_on "Update" }
+    choose "Dark"
+    click_on "Save"
+
+    expect(page).to have_text("Preferences saved.")
+    within("#preference_theme") { expect(page).to have_text("Dark") }
+    background = "getComputedStyle(document.body).backgroundColor"
+    expect(page.evaluate_script(background)).to start_with("oklch(0.13")
+  end
+
   it "removes a custom domain" do
     create(:tenant_domain, :active, tenant:, hostname: "portal.acme.com")
     visit "/settings/domains"

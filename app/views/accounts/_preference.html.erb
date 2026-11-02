@@ -1,0 +1,39 @@
+<%# One preference row, swapped in place for its form by "Update" (see AccountsController#edit).
+    Saving reloads the whole page: the theme and name show outside this row. %>
+<%= turbo_frame_tag "preference_#{field}", class: "block" do %>
+  <% if @editing == field %>
+    <div class="py-6 sm:flex">
+      <dt class="font-medium text-gray-900 sm:w-48 sm:flex-none sm:pr-6"><%= label_tag "user_#{field}", label %></dt>
+      <dd class="mt-2 sm:mt-0 sm:flex-auto">
+        <%= form_with model: @user, url: account_path, method: :patch, data: { turbo_frame: "_top" }, class: "flex flex-wrap items-center gap-3" do |form| %>
+          <% input_class = "min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5" %>
+          <% case field %>
+          <% when "name" %>
+            <%= form.text_field :name, autofocus: true, autocomplete: "name", class: input_class %>
+          <% when "time_zone" %>
+            <%= form.select :time_zone, time_zone_options, {}, autofocus: true, class: input_class %>
+          <% when "theme" %>
+            <fieldset class="flex flex-1 flex-wrap gap-x-6 gap-y-2">
+              <legend class="sr-only"><%= label %></legend>
+              <% theme_options.each do |value, option_label| %>
+                <div class="flex items-center gap-2">
+                  <%= form.radio_button :theme, value, class: "size-4 cursor-pointer accent-brand-primary" %>
+                  <%= form.label :theme, option_label, value: %>
+                </div>
+              <% end %>
+            </fieldset>
+          <% end %>
+
+          <%= form.submit "Save", class: "cursor-pointer rounded-md bg-brand-primary px-3 py-1.5 font-semibold text-brand-primary-foreground hover:opacity-90" %>
+          <%= link_to "Cancel", account_path, class: "font-semibold text-gray-700 hover:text-gray-900" %>
+        <% end %>
+
+        <% @user.errors.full_messages_for(field).each do |message| %>
+          <p class="mt-2 text-red-700" role="alert"><%= message %></p>
+        <% end %>
+      </dd>
+    </div>
+  <% else %>
+    <%= render "accounts/row", label:, value:, action: "Update", path: edit_account_path(field:) %>
+  <% end %>
+<% end %>

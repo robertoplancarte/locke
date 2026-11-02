@@ -7,8 +7,8 @@ class TwoFactorAuthentication::Challenge::RecoveryCodesController < ApplicationC
   end
 
   def create
-    if recover_code = @user.recovery_codes.find_by(code: params[:code], used: false)
-      recover_code.update!(used: true); sign_in_and_redirect_to_root
+    if @user.recovery_codes.redeem(params[:code])
+      sign_in_and_redirect_to_root
     else
       redirect_to new_two_factor_authentication_challenge_recovery_codes_path, alert: "That code didn't work. Please try again"
     end

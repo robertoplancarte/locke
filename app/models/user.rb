@@ -5,7 +5,10 @@ class User < ApplicationRecord
 
   # Deterministic, so accounts can still be found by email
   encrypts :email, deterministic: true
-  encrypts :otp_secret
+  encrypts :otp_secret, :name
+
+  # system follows the device's light or dark setting
+  enum :theme, %w[system light dark].index_by(&:itself), prefix: true, validate: true
 
   generates_token_for :email_verification, expires_in: 2.days do
     email
@@ -26,8 +29,16 @@ class User < ApplicationRecord
   validates_uniqueness_to_tenant :email
   validates :password, allow_nil: true, length: { minimum: 12 }
   validates :password, not_pwned: { message: "might easily be guessed" }
+  validates :name, length: { maximum: 100 }
+  validate :time_zone_exists
 
   normalizes :email, with: -> { _1.strip.downcase }
+  normalizes :name, with: -> { _1.squish.presence }
+
+  def display_name = name || email
+
+  # Up to two letters for an avatar: from the name's words, or the email's first letter
+  def initials = (name ? name.split.map(&:first).values_at(0, -1).uniq.join : email.first).upcase
 
   def two_factor_enabled? = otp_required_for_sign_in?
 
@@ -62,5 +73,11 @@ class User < ApplicationRecord
 
   after_update if: [:verified_previously_changed?, :verified?] do
     events.create! action: "email_verified"
+  end
+
+  private
+
+  def time_zone_exists
+    errors.add(:time_zone, "isn't a time zone we know") unless ActiveSupport::TimeZone[time_zone.to_s]
   end
 end

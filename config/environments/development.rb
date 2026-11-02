@@ -84,4 +84,6 @@ Rails.application.configure do
   config.active_record.encryption.primary_key = "development-primary-key-not-for-production"
   config.active_record.encryption.deterministic_key = "development-deterministic-key-not-for-production"
   config.active_record.encryption.key_derivation_salt = "development-key-derivation-salt-not-for-production"
+  # Leading dot allows locke.localhost and any tenant subdomain (acme., globex., ...).
+  config.hosts << ".locke.localhost"
 end

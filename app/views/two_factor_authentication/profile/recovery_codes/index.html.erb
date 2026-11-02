@@ -1,8 +1,17 @@
-
 <h1>Two-factor recovery codes</h1>
-<p>Recovery codes provide a way to log in if you lose your phone (or don't have it with you). Save these and keep them somewhere safe.</p>
+<p>Recovery codes provide a way to log in if you lose your phone (or don't have it with you). Each code works once.</p>
 
-<ul><%= render @recovery_codes %></ul>
+<% if @codes %>
+  <p><strong>Save these now and keep them somewhere safe. They won't be shown again.</strong></p>
+
+  <ul id="recovery_codes">
+    <% @codes.each do |code| %>
+      <li><code><%= code %></code></li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>You have <%= pluralize @unused_count, "unused recovery code" %>.</p>
+<% end %>
 
 <div><%= link_to "OK, I'm done", root_path %></div>
 
@@ -10,6 +19,7 @@
 
 <h2>Need new recovery codes?</h2>
 
-<p>If you think your codes have fallen into the wrong hands, you can get a new set. Be sure to save the new ones because the old codes will stop working.</p>
+<p>If you've lost your codes, used them up, or think they've fallen into the wrong hands, you can get a new set. The old codes will stop working.</p>
 
-<%= button_to "Generate new recovery codes", two_factor_authentication_profile_recovery_codes_path %>
+<%# Not a Turbo submission: the codes are rendered in the response rather than after a redirect %>
+<%= button_to "Generate new recovery codes", two_factor_authentication_profile_recovery_codes_path, form: { data: { turbo: false } } %>

@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html data-theme="<%= current_theme %>">
   <head>
     <%= render "layouts/head" %>
   </head>
 
-  <body class="min-h-screen bg-gray-50 text-gray-900">
+  <body class="min-h-screen bg-gray-50 text-gray-900" data-theme="<%= current_theme %>">
     <% if current_tenant %>
-      <header class="bg-brand-secondary text-brand-secondary-foreground">
+      <%# The border separates the header from the page when the brand color is as dark as dark mode %>
+      <header class="bg-brand-secondary text-brand-secondary-foreground dark:border-b dark:border-gray-200">
         <div class="mx-auto flex max-w-4xl flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3">
           <%= link_to root_path, class: "flex items-center gap-3 font-semibold" do %>
             <% if current_tenant.logo.attached? %>
@@ -21,13 +22,20 @@
             <%= link_to "Authentication", edit_settings_authentication_path, class: "opacity-80 hover:opacity-100" %>
             <%= link_to "Identity providers", settings_identity_providers_path, class: "opacity-80 hover:opacity-100" %>
           </nav>
+
+          <% if Current.user %>
+            <%= link_to account_path, class: "ms-auto -m-1.5 p-1.5", title: Current.user.display_name do %>
+              <span class="sr-only">Your account</span>
+              <span aria-hidden="true" class="flex size-8 items-center justify-center rounded-full bg-brand-secondary-foreground/15 text-xs font-semibold ring-1 ring-brand-secondary-foreground/25"><%= Current.user.initials %></span>
+            <% end %>
+          <% end %>
         </div>
       </header>
     <% end %>
 
     <main class="mx-auto max-w-4xl px-4 py-10">
       <%= render "application/flash" %>
-      <%= yield %>
+      <%= content_for?(:content) ? yield(:content) : yield %>
     </main>
   </body>
 </html>

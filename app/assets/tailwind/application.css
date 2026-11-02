@@ -7,6 +7,8 @@
   --brand-primary-foreground: #FFFFFF;
   --brand-secondary: #0F172A;
   --brand-secondary-foreground: #FFFFFF;
+  /* Brand-colored text; lightened in dark mode, where the brand color is too dark to read */
+  --brand-primary-text: var(--brand-primary);
 }
 
 /* `inline` makes utilities reference the runtime variables, so classes like
@@ -14,8 +16,68 @@
 @theme inline {
   --color-brand-primary: var(--brand-primary);
   --color-brand-primary-foreground: var(--brand-primary-foreground);
+  --color-brand-primary-text: var(--brand-primary-text);
   --color-brand-secondary: var(--brand-secondary);
   --color-brand-secondary-foreground: var(--brand-secondary-foreground);
+}
+
+/* Dark mode follows the signed-in user's theme on <html data-theme>: "dark", or
+   "system" (the default, and on signed-out pages) when the device prefers it.
+   Also usable as a dark: utility variant. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme="system"], [data-theme="system"] *) {
+      @slot;
+    }
+  }
+}
+
+/* The app is styled with light grays and white; in dark mode those palette
+   variables are swapped for their dark counterparts, so every page follows
+   without dark: classes. Status colors become dim tints with light text. */
+:root {
+  @variant dark {
+    color-scheme: dark;
+
+    --brand-primary-text: color-mix(in oklab, var(--brand-primary) 55%, white);
+
+    --color-white: oklch(21% 0.034 264.665);
+    --color-gray-50: oklch(13% 0.028 261.692);
+    --color-gray-100: oklch(27.8% 0.033 256.848);
+    --color-gray-200: oklch(37.3% 0.034 259.733);
+    --color-gray-300: oklch(44.6% 0.03 256.802);
+    --color-gray-400: oklch(55.1% 0.027 264.364);
+    --color-gray-500: oklch(70.7% 0.022 261.325);
+    --color-gray-600: oklch(87.2% 0.01 258.338);
+    --color-gray-700: oklch(92.8% 0.006 264.531);
+    --color-gray-900: oklch(98.5% 0.002 247.839);
+
+    --color-red-50: oklch(27% 0.07 27.3);
+    --color-red-100: oklch(32% 0.09 27.3);
+    --color-red-200: oklch(42% 0.12 27.3);
+    --color-red-600: oklch(70% 0.19 27.3);
+    --color-red-700: oklch(78% 0.14 27.3);
+    --color-red-800: oklch(86% 0.09 27.3);
+
+    --color-orange-100: oklch(32% 0.08 50);
+    --color-orange-800: oklch(86% 0.09 50);
+
+    --color-yellow-50: oklch(27% 0.05 90);
+    --color-yellow-100: oklch(32% 0.07 90);
+    --color-yellow-600: oklch(80% 0.15 85);
+    --color-yellow-800: oklch(88% 0.1 90);
+
+    --color-green-50: oklch(27% 0.05 150);
+    --color-green-100: oklch(32% 0.07 150);
+    --color-green-200: oklch(42% 0.09 150);
+    --color-green-600: oklch(72% 0.16 150);
+    --color-green-700: oklch(80% 0.13 150);
+    --color-green-800: oklch(87% 0.09 150);
+  }
 }
 
 /* Readable defaults for bare HTML, mostly the views authentication-zero generated.
@@ -35,7 +97,7 @@
   }
 
   a:not([class]) {
-    @apply font-medium text-brand-primary underline-offset-2 hover:underline;
+    @apply font-medium text-brand-primary-text underline-offset-2 hover:underline;
   }
 
   ul:not([class]) {

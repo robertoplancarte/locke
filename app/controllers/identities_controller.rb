@@ -8,7 +8,7 @@ class IdentitiesController < ApplicationController
   def destroy
     @identity = @user.identities.find(params[:id])
     @identity.destroy
-    redirect_to identities_path, notice: "#{@identity.provider_name} has been unlinked"
+    redirect_back_or_to identities_path, notice: "#{@identity.label} has been unlinked"
   end
 
   private

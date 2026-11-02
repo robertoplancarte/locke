@@ -5,7 +5,7 @@
   <% @identities.each do |identity| %>
     <div id="<%= dom_id identity %>">
       <p>
-        <strong><%= identity.provider_name %></strong>
+        <strong><%= identity.label %></strong>
         linked <%= time_ago_in_words identity.created_at %> ago
       </p>
       <%= button_to "Unlink", identity, method: :delete %>

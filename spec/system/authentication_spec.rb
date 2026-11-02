@@ -15,7 +15,7 @@ RSpec.describe "Authentication", type: :system do
     click_on "Sign up"
 
     expect(page).to have_text("Welcome! You have signed up successfully")
-    expect(page).to have_text("Signed as ada@example.com")
+    expect(page).to have_text("Welcome, ada@example.com")
   end
 
   it "signs in to a tenant" do

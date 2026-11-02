@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html class="h-full bg-gray-50">
+<html class="h-full bg-gray-50" data-theme="<%= current_theme %>">
   <head>
     <%= render "layouts/head" %>
   </head>
 
-  <body class="h-full text-gray-900">
+  <body class="h-full text-gray-900" data-theme="<%= current_theme %>">
     <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div class="px-4 sm:mx-auto sm:w-full sm:max-w-md">
         <% if current_tenant.logo.attached? %>

@@ -26,10 +26,10 @@
   <div class="flex items-center justify-between text-sm/6">
     <% if current_tenant.sign_in_links_enabled? %>
       <%# Sends the same form, typed email included, to the sign-in link endpoint; skips validation since no password is needed %>
-      <%= form.submit "Email me a sign-in link", formaction: sessions_passwordless_path, formnovalidate: true, class: "cursor-pointer font-semibold text-brand-primary hover:opacity-80" %>
+      <%= form.submit "Email me a sign-in link", formaction: sessions_passwordless_path, formnovalidate: true, class: "cursor-pointer font-semibold text-brand-primary-text hover:opacity-80" %>
     <% end %>
     <%# ms-auto keeps it on the right when it's alone in the row %>
-    <%= link_to "Forgot password?", new_identity_password_reset_path, class: "ms-auto font-semibold text-brand-primary hover:opacity-80" %>
+    <%= link_to "Forgot password?", new_identity_password_reset_path, class: "ms-auto font-semibold text-brand-primary-text hover:opacity-80" %>
   </div>
 <% end %>
 
@@ -61,6 +61,6 @@
 <% if current_tenant.sign_up_enabled? %>
   <% content_for :footer do %>
     Don't have an account?
-    <%= link_to "Sign up", sign_up_path, class: "font-semibold text-brand-primary hover:opacity-80" %>
+    <%= link_to "Sign up", sign_up_path, class: "font-semibold text-brand-primary-text hover:opacity-80" %>
   <% end %>
 <% end %>

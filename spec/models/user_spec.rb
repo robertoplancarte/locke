@@ -46,4 +46,36 @@ RSpec.describe User, type: :model do
       expect(build(:user, tenant:, email: "ada@example.com")).to be_invalid
     end
   end
+
+  describe "preferences" do
+    subject(:user) { build(:user) }
+
+    it "defaults to UTC and the device's theme" do
+      expect(user).to have_attributes(time_zone: "Etc/UTC", theme: "system")
+    end
+
+    it "is displayed by name once it has one" do
+      expect { user.name = "  Ada   Lovelace " }.to change(user, :display_name).from(user.email).to("Ada Lovelace")
+    end
+
+    it "takes a blank name as none" do
+      user.name = " "
+
+      expect(user.name).to be_nil
+    end
+
+    it "accepts IANA time zones only if they exist" do
+      user.time_zone = "America/New_York"
+      expect(user.tap(&:validate).errors[:time_zone]).to be_empty
+
+      user.time_zone = "Mars/Olympus_Mons"
+      expect(user.tap(&:validate).errors[:time_zone]).to be_present
+    end
+
+    it "rejects an unknown theme" do
+      user.theme = "sepia"
+
+      expect(user.tap(&:validate).errors[:theme]).to be_present
+    end
+  end
 end

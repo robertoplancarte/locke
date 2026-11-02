@@ -1,46 +1,14 @@
+<h1>Welcome, <%= Current.user.display_name %></h1>
 
-<p>Signed as <%= Current.user.email %></p>
+<ul>
+  <li><%= link_to "Account settings", account_path %></li>
+  <li><%= link_to "Send invitation", new_invitation_path %></li>
+</ul>
 
-<h2>Login and verification</h2>
-
-<div>
-  <%= link_to "Change password", edit_password_path %>
-</div>
-
-<div>
-  <%= link_to "Change email address", edit_identity_email_path %>
-</div>
-
-<div>
-  <%= link_to "Sign-in providers", identities_path %>
-</div>
-
-<% if Current.user.can_set_up_two_factor? %>
-  <div>
-    <%= link_to "Two-Factor Authentication", new_two_factor_authentication_profile_totp_path %>
-  </div>
+<%# MasqueradesController only allows this in development %>
+<% if Rails.env.development? %>
+  <%= button_to "Sign in as last user", user_masquerade_path(User.last) %>
 <% end %>
-
-<% if Current.user.otp_required_for_sign_in? %>
-  <div><%= link_to "Recovery Codes", two_factor_authentication_profile_recovery_codes_path %></div>
-  <div><%= link_to "Security keys", two_factor_authentication_profile_security_keys_path %></div>
-<% end %>
-
-<div>
-  <%= link_to "Send invitation", new_invitation_path %>
-</div>
-
-<%= button_to "Signin as last user", user_masquerade_path(User.last) %>
-
-<h2>Access history</h2>
-
-<div>
-  <%= link_to "Devices & Sessions", sessions_path %>
-</div>
-
-<div>
-  <%= link_to "Activity Log", authentications_events_path %>
-</div>
 
 <br>
 

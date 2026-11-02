@@ -30,6 +30,12 @@ Rails.application.routes.draw do
     post "sign_up", to: "registrations#create"
     resources :sessions, only: [:index, :show, :destroy]
     resource  :password, only: [:edit, :update]
+    resource  :account, only: %i[show edit update] do
+      scope module: :accounts do
+        resource :security, only: :show
+        resource :activity, only: :show
+      end
+    end
     resources :identities, only: [:index, :destroy]
     namespace :identity do
       resource :email,              only: [:edit, :update]

@@ -11,6 +11,7 @@ class ApplicationController < ActionController::Base
   before_action :set_current_request_details
   before_action :authenticate
   before_action :require_two_factor_setup
+  around_action :use_time_zone
 
   private
 
@@ -52,6 +53,11 @@ class ApplicationController < ActionController::Base
     if Current.user&.must_set_up_two_factor?
       redirect_to new_two_factor_authentication_profile_totp_path, alert: "#{current_tenant.name} requires two-factor authentication. Set it up to continue."
     end
+  end
+
+  # Times show in the signed-in user's zone, UTC otherwise
+  def use_time_zone(&)
+    Time.use_zone(Current.user&.time_zone || "Etc/UTC", &)
   end
 
   def set_current_request_details

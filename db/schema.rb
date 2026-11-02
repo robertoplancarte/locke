@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,6 +60,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "identity_provider_id"
+    t.string "email"
     t.index ["identity_provider_id"], name: "index_identities_on_identity_provider_id"
     t.index ["tenant_id", "provider", "identity_provider_id", "uid"], name: "index_identities_on_tenant_provider_and_uid", unique: true, nulls_not_distinct: true
     t.index ["user_id"], name: "index_identities_on_user_id"
@@ -83,10 +84,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
 
   create_table "recovery_codes", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.string "code", null: false
     t.boolean "used", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code_digest", null: false
     t.index ["user_id"], name: "index_recovery_codes_on_user_id"
   end
 
@@ -171,6 +172,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
     t.string "webauthn_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "name"
+    t.string "time_zone", default: "Etc/UTC", null: false
+    t.string "theme", default: "system", null: false
     t.index ["tenant_id", "email"], name: "index_users_on_tenant_id_and_email", unique: true
   end
 

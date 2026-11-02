@@ -1,0 +1,43 @@
+<% content_for :title, "Security · #{current_tenant.name}" %>
+<% action_class = "shrink-0 font-semibold text-brand-primary-text hover:opacity-80" %>
+
+<%= render layout: "accounts/section", locals: { title: "Signing in", description: "Your password and the address your sign-in emails go to." } do %>
+  <%= render "accounts/row", label: "Password", value: "••••••••••••", action: "Update", path: edit_password_path %>
+  <%= render "accounts/row", label: "Email address", action: "Update", path: edit_identity_email_path,
+        value: safe_join([ @user.email, (tag.span("Unverified", class: "ms-2 rounded bg-yellow-50 px-1.5 py-0.5 text-xs font-medium text-yellow-800") unless @user.verified?) ]) %>
+<% end %>
+
+<%= render layout: "accounts/section", locals: {
+      title: "Sign-in providers", description: "Other accounts you can sign in with instead of your password.", list: :ul,
+      footer: link_to("Manage sign-in providers", identities_path, class: action_class) } do %>
+  <% @user.identities.includes(:identity_provider).order(:created_at).each do |identity| %>
+    <li id="<%= dom_id identity %>" class="flex items-center justify-between gap-x-6 py-6">
+      <div>
+        <p class="font-medium text-gray-900"><%= identity.provider_name %></p>
+        <p class="mt-1 text-gray-500"><%= safe_join([ identity.email, "Linked #{time_ago_in_words(identity.created_at)} ago" ].compact, " · ") %></p>
+      </div>
+      <%= button_to "Remove", identity_path(identity), method: :delete, form_class: "shrink-0",
+            form: { data: { turbo_confirm: "Remove #{identity.label}? You won't be able to sign in with it until you link it again." } },
+            class: "cursor-pointer font-semibold text-red-700 hover:opacity-80" %>
+    </li>
+  <% end %>
+  <% if @user.identities.none? %>
+    <li class="py-6 text-gray-500">None linked yet.</li>
+  <% end %>
+<% end %>
+
+<%= render layout: "accounts/section", locals: { title: "Two-factor authentication", description: "A second step after your password, so a stolen password isn't enough." } do %>
+  <% if @user.can_set_up_two_factor? %>
+    <%= render "accounts/row", label: "Authenticator app", value: @user.two_factor_enabled? ? "On" : "Off",
+          action: @user.two_factor_enabled? ? "Change" : "Set up", path: new_two_factor_authentication_profile_totp_path %>
+  <% else %>
+    <%= render "accounts/row", label: "Authenticator app", value: "Turned off for #{current_tenant.name}" %>
+  <% end %>
+
+  <% if @user.two_factor_enabled? %>
+    <%= render "accounts/row", label: "Recovery codes", value: "#{@user.recovery_codes.unused.count} unused",
+          action: "View", path: two_factor_authentication_profile_recovery_codes_path %>
+    <%= render "accounts/row", label: "Security keys", value: pluralize(@user.security_keys.count, "key"),
+          action: "Manage", path: two_factor_authentication_profile_security_keys_path %>
+  <% end %>
+<% end %>

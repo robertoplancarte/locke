@@ -28,6 +28,15 @@ RSpec.describe "Authentication: signing in with a provider", type: :request do
     expect(response).to redirect_to(root_path)
   end
 
+  it "remembers the provider account's email, and keeps it current" do
+    user = create(:user, tenant:, email: "ada@example.com")
+    identity = create(:identity, user:, uid: "ada-uid", email: "old@example.com")
+
+    callback
+
+    expect(ActsAsTenant.with_tenant(tenant) { identity.reload.email }).to eq("ada@example.com")
+  end
+
   it "signs in the user who owns the identity, even under a different email" do
     user = create(:user, tenant:, email: "someone-else@example.com")
     create(:identity, user:, uid: "ada-uid")
