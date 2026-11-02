@@ -64,11 +64,6 @@ class User < ApplicationRecord
     self.public_id ||= "usr_#{SecureRandom.base58(24)}"
   end
 
-  after_update if: :password_digest_previously_changed? do
-    # Each one logged out properly: its tokens revoked, and its apps told
-    sessions.where.not(id: Current.session).find_each(&:log_out)
-  end
-
   after_update if: :email_previously_changed? do
     events.create! action: "email_verification_requested"
   end
@@ -79,6 +74,16 @@ class User < ApplicationRecord
 
   after_update if: [ :verified_previously_changed?, :verified? ] do
     events.create! action: "email_verified"
+  end
+
+  # Changing the password logs out every other session, its apps included
+  # (Session#log_out), keeping only the one it was changed from, if any.
+  # False with errors when the new password isn't accepted.
+  def change_password(attributes, keeping: nil)
+    return false unless update(attributes)
+
+    sessions.where.not(id: keeping).find_each(&:log_out)
+    true
   end
 
   private
