@@ -1,0 +1,21 @@
+<%# The avatar in the top nav, opening a menu with the account page and logging out %>
+<div class="relative ms-auto" data-controller="dropdown"
+     data-action="click@window->dropdown#closeOnOutsideClick keydown.esc@window->dropdown#closeOnEscape">
+  <button type="button" class="-m-1.5 flex cursor-pointer rounded-full p-1.5" title="<%= Current.user.display_name %>"
+          aria-expanded="false" aria-controls="account_menu"
+          data-dropdown-target="button" data-action="dropdown#toggle">
+    <span class="sr-only">Your account</span>
+    <span aria-hidden="true" class="flex size-8 items-center justify-center rounded-full bg-brand-secondary-foreground/15 text-xs font-semibold ring-1 ring-brand-secondary-foreground/25"><%= Current.user.initials %></span>
+  </button>
+
+  <div id="account_menu" hidden data-dropdown-target="menu"
+       class="absolute end-0 z-10 mt-2.5 w-56 origin-top-right rounded-md bg-white py-2 text-gray-900 shadow-lg ring-1 ring-gray-200">
+    <div class="truncate border-b border-gray-200 px-3 pb-2 text-sm">
+      <span class="block font-semibold"><%= Current.user.display_name %></span>
+      <span class="block truncate text-gray-500"><%= Current.user.email %></span>
+    </div>
+    <%= link_to "Your account", account_path, class: "mt-1 block px-3 py-1.5 text-sm/6 hover:bg-gray-100" %>
+    <%= button_to "Log out", Current.session, method: :delete,
+          class: "block w-full cursor-pointer px-3 py-1.5 text-start text-sm/6 hover:bg-gray-100" %>
+  </div>
+</div>
