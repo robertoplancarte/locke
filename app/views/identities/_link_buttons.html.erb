@@ -1,0 +1,10 @@
+<%# Buttons that link another provider to the signed-in user. Each opens the provider's
+    sign-in in a new tab, which ends on a page saying the account is linked, so this page
+    stays put. link=1 comes back to the callback in omniauth.params. %>
+<div class="flex flex-wrap gap-3">
+  <% providers.each do |name, path| %>
+    <%= button_to "Link #{name}", path, params: { link: 1 }, data: { turbo: false }, form: { target: "_blank" },
+          class: IdentityProvider::BUTTON_CLASS.sub("w-full", "w-auto") %>
+  <% end %>
+</div>
+<p class="mt-3 text-sm/6 text-gray-500">Each opens the provider's sign-in in a new tab.</p>

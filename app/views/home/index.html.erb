@@ -1,0 +1,15 @@
+<h1>Welcome, <%= Current.user.display_name %></h1>
+
+<ul>
+  <li><%= link_to "Account settings", account_path %></li>
+  <li><%= link_to "Send invitation", new_invitation_path %></li>
+</ul>
+
+<%# MasqueradesController only allows this in development %>
+<% if Rails.env.development? %>
+  <%= button_to "Sign in as last user", user_masquerade_path(User.last) %>
+<% end %>
+
+<br>
+
+<%= button_to "Log out", Current.session, method: :delete %>

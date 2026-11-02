@@ -1,0 +1,14 @@
+<%# A titled group of rows; rows go in the block %>
+<section>
+  <h2 class="text-base/7 font-semibold text-gray-900"><%= title %></h2>
+  <p class="mt-1 text-sm/6 text-gray-500"><%= description %></p>
+
+  <%# A <dl> of label/value rows, or a <ul> of items %>
+  <%= content_tag local_assigns.fetch(:list, :dl), class: "mt-6 divide-y divide-gray-100 border-t border-gray-200 text-sm/6" do %>
+    <%= yield %>
+  <% end %>
+
+  <% if local_assigns[:footer] %>
+    <div class="flex border-t border-gray-100 pt-6 text-sm/6"><%= footer %></div>
+  <% end %>
+</section>

@@ -13,4 +13,18 @@ module ApplicationHelper
 
     tag.style(":root { #{variables.map { |name, value| "#{name}: #{value};" }.join(" ")} }", nonce: content_security_policy_nonce)
   end
+
+  # The signed-in user's theme; signed-out pages follow the device
+  def current_theme = Current.user&.theme || "system"
+
+  # Rails' named zones, one option per IANA identifier (some names share one)
+  def time_zone_options
+    ActiveSupport::TimeZone.all.group_by { it.tzinfo.name }.map do |identifier, zones|
+      [ "(GMT#{zones.first.formatted_offset}) #{zones.map(&:name).join(", ")}", identifier ]
+    end
+  end
+
+  def time_zone_label(identifier) = time_zone_options.rassoc(identifier)&.first || identifier
+
+  def theme_options = { "system" => "Match my device", "light" => "Light", "dark" => "Dark" }
 end

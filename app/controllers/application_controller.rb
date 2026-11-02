@@ -5,16 +5,53 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
-  set_current_tenant_through_filter
-  before_action :set_tenant_from_host
+  # The tenant must be resolved first: users, and so sessions, belong to it
+  include TenantFromHost
+  before_action :set_current_request_details
+  before_action :authenticate
+  before_action :require_two_factor_setup
+  around_action :use_time_zone
 
   private
 
-  # The bare root domain has no tenant; an unknown subdomain or domain is a 404.
-  def set_tenant_from_host
-    tenant = Tenant.find_by_host(request.host)
-    raise ActiveRecord::RecordNotFound, "No tenant for #{request.host}" if tenant.nil? && !Tenant.root_host?(request.host)
+  def authenticate
+    if session_record = find_session_record
+      Current.session = session_record
+    else
+      # Pages people open, not form posts or fetches, are worth coming back to after signing in
+      session[:return_to] = request.fullpath if request.get? && request.format.html?
+      # Carries "logged out" and the like through to the sign-in page, which then
+      # doesn't send people to the tenant's default provider to be signed straight back in
+      flash.keep
+      redirect_to sign_in_path
+    end
+  end
 
-    set_current_tenant(tenant)
+  # Joining the tenant-scoped users means a session only counts on its own tenant's hosts
+  def find_session_record
+    Session.joins(:user).find_by(id: cookies.signed[:session_token])
+  end
+
+  # Tenants can require 2FA; until it's set up, signed-in users can only set it up or log out
+  def require_two_factor_setup
+    if Current.user&.must_set_up_two_factor?
+      redirect_to new_two_factor_authentication_profile_totp_path, alert: "#{current_tenant.name} requires two-factor authentication. Set it up to continue."
+    end
+  end
+
+  # Times show in the signed-in user's zone, UTC otherwise
+  def use_time_zone(&)
+    Time.use_zone(Current.user&.time_zone || "Etc/UTC", &)
+  end
+
+  def set_current_request_details
+    Current.user_agent = request.user_agent
+    Current.ip_address = request.ip
+  end
+
+  def require_sudo
+    unless Current.session.sudo?
+      redirect_to new_sessions_sudo_path(proceed_to_url: request.original_url)
+    end
   end
 end

@@ -1,0 +1,32 @@
+
+<h1>Change your password</h1>
+
+<%= form_with(url: password_path, method: :patch) do |form| %>
+  <%= render "application/form_errors", record: @user %>
+
+  <div>
+    <%= form.label :password_challenge, style: "display: block" %>
+    <%= form.password_field :password_challenge, required: true, autofocus: true, autocomplete: "current-password" %>
+  </div>
+
+  <div>
+    <%= form.label :password, "New password", style: "display: block" %>
+    <%= form.password_field :password, required: true, autocomplete: "new-password" %>
+    <div>12 characters minimum.</div>
+  </div>
+
+  <div>
+    <%= form.label :password_confirmation, "Confirm new password", style: "display: block" %>
+    <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password" %>
+  </div>
+
+  <div>
+    <%= form.submit "Save changes" %>
+  </div>
+<% end %>
+
+<br>
+
+<div>
+  <%= link_to "Back", root_path %>
+</div>

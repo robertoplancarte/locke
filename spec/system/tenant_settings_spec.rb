@@ -3,10 +3,15 @@ require "rails_helper"
 RSpec.describe "Tenant settings", type: :system do
   let!(:tenant) { create(:tenant, subdomain: "acme", name: "Acme") }
 
-  before { use_tenant_host(tenant) }
+  let!(:user) { create(:user, tenant:) }
+
+  before do
+    use_tenant_host(tenant)
+    sign_in_as user
+  end
 
   it "rebrands the workspace" do
-    visit "/"
+    visit "/settings/branding/edit"
 
     fill_in "Workspace name", with: "Acme Corp"
     find_field("Primary color").set("#16a34a")
@@ -29,6 +34,29 @@ RSpec.describe "Tenant settings", type: :system do
       expect(page).to have_text("Waiting for DNS")
       expect(page).to have_css("td", text: "tenants.localhost")
     end
+  end
+
+  it "changes the workspace address" do
+    visit "/settings/domains"
+
+    fill_in "Subdomain", with: "acme-corp"
+    accept_confirm { click_on "Change address" }
+
+    expect(page).to have_current_path(%r{\Ahttp://acme-corp\.localhost:\d+/sign_in\z}, url: true)
+    expect(page).to have_button("Sign in")
+  end
+
+  it "switches to the dark theme" do
+    visit "/account"
+
+    within("#preference_theme") { click_on "Update" }
+    choose "Dark"
+    click_on "Save"
+
+    expect(page).to have_text("Preferences saved.")
+    within("#preference_theme") { expect(page).to have_text("Dark") }
+    background = "getComputedStyle(document.body).backgroundColor"
+    expect(page.evaluate_script(background)).to start_with("oklch(0.13")
   end
 
   it "removes a custom domain" do

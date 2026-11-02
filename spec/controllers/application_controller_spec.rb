@@ -2,6 +2,8 @@ require "rails_helper"
 
 RSpec.describe ApplicationController, type: :controller do
   controller do
+    skip_before_action :authenticate
+
     def index
       render plain: ActsAsTenant.current_tenant&.subdomain.to_s
     end
