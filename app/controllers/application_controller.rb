@@ -41,6 +41,9 @@ class ApplicationController < ActionController::Base
     else
       # Pages people open, not form posts or fetches, are worth coming back to after signing in
       session[:return_to] = request.fullpath if request.get? && request.format.html?
+      # Carries "logged out" and the like through to the sign-in page, which then
+      # doesn't send people to the tenant's default provider to be signed straight back in
+      flash.keep
       redirect_to sign_in_path
     end
   end

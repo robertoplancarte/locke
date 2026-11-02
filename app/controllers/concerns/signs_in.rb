@@ -25,6 +25,12 @@ module SignsIn
       local_path(return_to) || root_path
     end
 
+    # Back to the sign-in form, keeping it shown (?local=1) when the tenant's
+    # default provider would otherwise take people away from it
+    def local_sign_in_path(**params)
+      sign_in_path(**params, local: (1 if current_tenant.default_identity_provider_id))
+    end
+
     # Only paths on this host, so a crafted return_to can't send people to another site.
     # Browsers read "//host" and "/\host" as another host, and drop tabs and newlines.
     def local_path(path)

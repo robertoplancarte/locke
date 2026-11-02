@@ -1,0 +1,7 @@
+<%# Starts sign-in with a provider. A POST, as OmniAuth's CSRF protection requires.
+    A SAML provider hands RelayState back with its response, which is how return_to survives it.
+    auto_submit sends it without a click; the button stays for browsers without JavaScript. %>
+<% relay_state = { RelayState: session[:return_to] }.compact if identity_provider.saml? %>
+<%= button_to label, identity_provider.auth_path, params: relay_state || {},
+      data: { turbo: false }, form: local_assigns[:auto_submit] ? { data: { controller: "auto-submit" } } : {},
+      form_class: "w-full", class: IdentityProvider::BUTTON_CLASS %>

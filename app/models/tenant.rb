@@ -10,6 +10,8 @@ class Tenant < ApplicationRecord
   has_many :domains, class_name: "TenantDomain", dependent: :restrict_with_error
   has_many :users, dependent: :restrict_with_error
   has_many :identity_providers, dependent: :destroy
+  # Where the sign-in page sends people straight away; nil shows Locke's own form
+  belongs_to :default_identity_provider, class_name: "IdentityProvider", optional: true
   has_many :retired_subdomains, dependent: :delete_all
   has_one_attached :logo
 
@@ -27,6 +29,7 @@ class Tenant < ApplicationRecord
   validates :primary_color, :secondary_color, format: { with: HEX_COLOR_FORMAT, message: "must be a hex color like #1A2B3C" }
   validate :logo_is_an_acceptable_image
   validate :subdomain_not_retired_by_another_tenant, if: :subdomain_changed?
+  validate :default_identity_provider_is_usable, if: :default_identity_provider_id_changed?
 
   # The old subdomain keeps redirecting here; moving back to an old one makes it current again
   after_update if: :subdomain_previously_changed? do
@@ -78,6 +81,14 @@ class Tenant < ApplicationRecord
 
   def subdomain_not_retired_by_another_tenant
     errors.add(:subdomain, :taken) if RetiredSubdomain.where(subdomain:).where.not(tenant_id: id).exists?
+  end
+
+  # Looked up unscoped by id, so check it's this tenant's own, and that people can sign in with it
+  def default_identity_provider_is_usable
+    return if default_identity_provider_id.nil?
+
+    provider = ActsAsTenant.without_tenant { IdentityProvider.find_by(id: default_identity_provider_id) }
+    errors.add(:default_identity_provider, "must be one of your enabled providers") unless provider&.tenant_id == id && provider.enabled?
   end
 
   def logo_is_an_acceptable_image

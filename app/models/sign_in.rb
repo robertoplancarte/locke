@@ -56,7 +56,14 @@ class SignIn
   def complete!
     raise "A second factor is still required" if second_factor_required?
 
-    user.sessions.create!(authenticated_at: Time.current, identity_provider:,
-      amr: amr.many? ? amr | [ "mfa" ] : amr)
+    user.sessions.create!(authenticated_at: Time.current, identity_provider:, amr: amr.many? ? amr | [ "mfa" ] : amr).tap do
+      # Break-glass use: the tenant sends everyone to its provider, and this didn't come through it
+      user.events.create!(action: "signed_in_without_default_provider") if bypassed_default_provider?
+    end
   end
+
+  private
+    def bypassed_default_provider?
+      (default_id = user.tenant.default_identity_provider_id) && identity_provider&.id != default_id
+    end
 end

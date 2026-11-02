@@ -30,6 +30,40 @@ RSpec.describe "Authentication", type: :system do
     expect(page).to have_text("Signed in successfully")
   end
 
+  context "with a default identity provider" do
+    let!(:okta) { create(:identity_provider, tenant:, name: "Okta") }
+
+    before do
+      tenant.update!(default_identity_provider: okta)
+      OmniAuth.config.test_mode = true
+      OmniAuth.config.mock_auth[:oidc] = OmniAuth::AuthHash.new(provider: "oidc", uid: "ada-sub", info: { email: "ada@example.com", email_verified: true })
+    end
+
+    after do
+      OmniAuth.config.mock_auth.delete(:oidc)
+      OmniAuth.config.test_mode = false
+    end
+
+    it "goes straight through the provider and back to the page that asked" do
+      create(:user, tenant:, email: "ada@example.com")
+      visit "/account"
+
+      expect(page).to have_text("Signed in successfully")
+      expect(page).to have_current_path("/account")
+    end
+
+    it "still offers the sign-in form" do
+      create(:user, tenant:, email: "ada@example.com")
+      visit "/sign_in?local=1"
+
+      fill_in "Email address", with: "ada@example.com"
+      fill_in "Password", with: "correct horse battery"
+      click_on "Sign in"
+
+      expect(page).to have_text("Signed in successfully")
+    end
+  end
+
   it "signs in with a link emailed from the sign in form" do
     create(:user, tenant:, email: "ada@example.com")
     visit "/sign_in"

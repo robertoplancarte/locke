@@ -4,10 +4,11 @@ class Sessions::OmniauthController < ApplicationController
   skip_before_action :verify_authenticity_token
   skip_before_action :authenticate
 
-  before_action :set_identity_provider
-  before_action :require_social_sign_in_enabled, unless: :identity_provider
-  before_action :require_verified_email
-  before_action :restore_return_to, if: -> { identity_provider&.saml? }
+  # Only the callback carries a provider's answer; /auth/failure has none to check
+  before_action :set_identity_provider, only: :create
+  before_action :require_social_sign_in_enabled, only: :create, unless: :identity_provider
+  before_action :require_verified_email, only: :create
+  before_action :restore_return_to, only: :create, if: -> { identity_provider&.saml? }
 
   # Matching accounts by email is only safe because every configured provider
   # verifies the emails it returns; otherwise anyone could claim an account by asserting its email.

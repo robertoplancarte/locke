@@ -10,6 +10,9 @@ class IdentityProvider < ApplicationRecord
     name: [ "name", "displayName", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" ]
   }.freeze
 
+  # How a provider's sign-in button looks on the sign-in page
+  BUTTON_CLASS = "flex w-full cursor-pointer items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm/6 font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50".freeze
+
   acts_as_tenant :tenant
 
   has_many :identities, dependent: :destroy
@@ -22,6 +25,12 @@ class IdentityProvider < ApplicationRecord
 
   scope :enabled, -> { where(enabled: true) }
 
+  # A disabled provider can't be the default: the sign-in page would send everyone to a dead end.
+  # Deleting one clears it in the database (on_delete: :nullify).
+  after_update if: -> { saved_change_to_enabled?(to: false) } do
+    Tenant.where(default_identity_provider_id: id).update_all(default_identity_provider_id: nil)
+  end
+
   validates :name, presence: true
   validate :urls_are_https
   validates :issuer, :client_id, :client_secret, presence: true, if: -> { enabled? && oidc? }
@@ -30,6 +39,8 @@ class IdentityProvider < ApplicationRecord
 
   # Where sign-in starts; the callback and SAML metadata live underneath
   def auth_path = "/auth/#{protocol}/#{id}"
+
+  def default? = tenant.default_identity_provider_id == id
 
   def redirect_url(base_url) = "#{base_url}#{auth_path}/callback"
 
