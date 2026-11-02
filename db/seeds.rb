@@ -8,18 +8,20 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-# Reachable in development at http://acme.localhost:3000
-Tenant.find_or_create_by!(subdomain: "acme") do |tenant|
-  tenant.name = "Acme Corp"
-  tenant.primary_color = "#DC2626"
-  tenant.secondary_color = "#111827"
-end
+# Reachable in development at http://acme.localhost:3000 and http://globex.localhost:3000.
+# Each gets a square logo mark from db/seeds/logos, pre-sized since nothing resizes uploads.
+{
+  "acme" => { name: "Acme Corp", primary_color: "#DC2626", secondary_color: "#111827" },
+  "globex" => { name: "Globex", primary_color: "#16A34A", secondary_color: "#14532D" }
+}.each do |subdomain, attributes|
+  tenant = Tenant.find_or_create_by!(subdomain:) { it.assign_attributes(attributes) }
+  next if tenant.logo.attached?
 
-# Reachable in development at http://globex.localhost:3000
-Tenant.find_or_create_by!(subdomain: "globex") do |tenant|
-  tenant.name = "Globex"
-  tenant.primary_color = "#16A34A"
-  tenant.secondary_color = "#14532D"
+  tenant.logo.attach(
+    io: Rails.root.join("db/seeds/logos/#{subdomain}.png").open,
+    filename: "#{subdomain}.png",
+    content_type: "image/png"
+  )
 end
 
 # Development users, all with the password "password". It fails the length and
