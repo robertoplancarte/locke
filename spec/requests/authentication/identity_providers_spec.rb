@@ -1,7 +1,7 @@
 require "rails_helper"
 
-# Signing in with a tenant's own OIDC or SAML provider. How accounts are matched
-# is shared with the app's providers and covered in omniauth_spec.rb.
+# Signing in with a tenant's own OIDC or SAML provider. How accounts are matched,
+# and when a provider creates them, is covered in spec/models/provider_account_spec.rb.
 RSpec.describe "Authentication: signing in with a tenant's identity provider", type: :request do
   let_it_be(:tenant) { create(:tenant, subdomain: "acme", social_sign_in_enabled: false) }
   let_it_be(:okta) { create(:identity_provider, tenant:, name: "Okta") }
@@ -19,67 +19,46 @@ RSpec.describe "Authentication: signing in with a tenant's identity provider", t
     OmniAuth.config.test_mode = false
   end
 
-  def identities_of(user) = ActsAsTenant.with_tenant(tenant) { user.identities.map { [ it.identity_provider, it.uid ] } }
+  def identities_of(user) = ActsAsTenant.with_tenant(tenant) { user.identities.map { |identity| [ identity.identity_provider, identity.uid ] } }
 
-  it "lists the enabled providers on the sign-in page" do
-    create(:identity_provider, tenant:, name: "Entra ID", enabled: false)
+  describe "the sign-in page" do
+    before_all { create(:identity_provider, tenant:, name: "Entra ID", enabled: false) }
 
-    get sign_in_path
+    it "lists the enabled providers" do
+      get sign_in_path
 
-    expect(response.body).to include("Okta").and include(okta.auth_path)
-    expect(response.body).not_to include("Entra ID")
+      expect(response.body).to include("Okta").and include(okta.auth_path)
+      expect(response.body).not_to include("Entra ID")
+    end
   end
 
   describe "the callback" do
     subject(:callback) { get "#{okta.auth_path}/callback" }
 
-    it "signs in with the identity tied to the provider, even with social sign-in off" do
-      user = create(:user, tenant:, email: "ada@example.com")
+    let_it_be(:ada) { create(:user, tenant:, email: "ada@example.com") }
 
+    it "signs in with the identity tied to the provider, even with social sign-in off" do
       callback
 
       expect(response).to redirect_to(root_path)
-      expect(identities_of(user)).to eq([ [ okta, "ada-sub" ] ])
-    end
-
-    it "creates accounts for new people, even with sign-ups off" do
-      tenant.update!(sign_up_enabled: false)
-
-      expect { callback }.to change { ActsAsTenant.with_tenant(tenant) { User.count } }.by(1)
-    end
-
-    it "doesn't create accounts when the provider is set not to" do
-      ActsAsTenant.with_tenant(tenant) { okta.update!(creates_users: false) }
-
-      expect { callback }.not_to change { ActsAsTenant.with_tenant(tenant) { User.count } }
-      expect(response).to redirect_to(sign_in_path)
-    end
-
-    it "keeps the same uid from different providers apart" do
-      user = create(:user, tenant:, email: "ada@example.com")
-      entra = create(:identity_provider, tenant:)
-      create(:identity, user:, tenant:, provider: "oidc", identity_provider: entra, uid: "ada-sub")
-
-      callback
-
-      expect(identities_of(user)).to contain_exactly([ entra, "ada-sub" ], [ okta, "ada-sub" ])
+      expect(identities_of(ada)).to eq([ [ okta, "ada-sub" ] ])
     end
 
     context "when the provider says the email isn't verified" do
       let(:auth_hash) { super().deep_merge(info: { email_verified: false }) }
 
       it "doesn't sign in" do
-        user = create(:user, tenant:, email: "ada@example.com")
-
         callback
 
         expect(response).to redirect_to(sign_in_path)
-        expect(user.sessions).not_to exist
+        expect(ada.sessions).not_to exist
       end
     end
 
     context "for another tenant's provider" do
-      subject(:callback) { get "#{create(:identity_provider).auth_path}/callback" }
+      subject(:callback) { get "#{someone_elses.auth_path}/callback" }
+
+      let_it_be(:someone_elses) { create(:identity_provider) }
 
       it "doesn't sign in" do
         expect { callback }.not_to change(Session, :count)

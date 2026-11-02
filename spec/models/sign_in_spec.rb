@@ -6,6 +6,8 @@ RSpec.describe SignIn do
   let_it_be(:tenant) { create(:tenant) }
   let_it_be(:user) { create(:user, tenant:) }
   let_it_be(:user_with_2fa) { create(:user, tenant:, otp_required_for_sign_in: true) }
+  let_it_be(:identity_provider) { create(:identity_provider, tenant:) }
+  let_it_be(:other_tenant) { create(:tenant) }
 
   around { |example| ActsAsTenant.with_tenant(tenant) { example.run } }
 
@@ -27,8 +29,6 @@ RSpec.describe SignIn do
 
   describe "#complete!" do
     it "records how and when the user signed in" do
-      identity_provider = create(:identity_provider, tenant:)
-
       freeze_time do
         session = described_class.new(user, method: :fed, identity_provider:).complete!
 
@@ -50,7 +50,6 @@ RSpec.describe SignIn do
 
   describe "challenge tokens" do
     it "round-trip the sign-in" do
-      identity_provider = create(:identity_provider, tenant:)
       token = described_class.new(user_with_2fa, method: :fed, identity_provider:).challenge_token
 
       expect(described_class.from_challenge_token(token)).to have_attributes(user: user_with_2fa, amr: [ "fed" ], identity_provider:)
@@ -67,7 +66,7 @@ RSpec.describe SignIn do
     it "don't work on another tenant" do
       token = described_class.new(user_with_2fa, method: :pwd).challenge_token
 
-      ActsAsTenant.with_tenant(create(:tenant)) do
+      ActsAsTenant.with_tenant(other_tenant) do
         expect(described_class.from_challenge_token(token)).to be_nil
       end
     end

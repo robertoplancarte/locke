@@ -189,6 +189,42 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
+  describe "default identity provider" do
+    let_it_be(:tenant, refind: true) { create(:tenant) }
+    let_it_be(:okta, refind: true) { create(:identity_provider, tenant:) }
+
+    before { tenant.update!(default_identity_provider: okta) }
+
+    context "with another tenant's provider" do
+      let_it_be(:foreign) { create(:identity_provider) }
+
+      it "isn't allowed" do
+        expect(tenant.update(default_identity_provider_id: foreign.id)).to be(false)
+        expect(tenant.errors[:default_identity_provider]).to be_present
+      end
+    end
+
+    context "with a disabled provider" do
+      let_it_be(:disabled) { create(:identity_provider, tenant:, enabled: false) }
+
+      it "isn't allowed" do
+        expect(tenant.update(default_identity_provider_id: disabled.id)).to be(false)
+      end
+    end
+
+    it "is cleared when the provider is disabled" do
+      ActsAsTenant.with_tenant(tenant) { okta.update!(enabled: false) }
+
+      expect(tenant.reload.default_identity_provider_id).to be_nil
+    end
+
+    it "is cleared when the provider is deleted" do
+      ActsAsTenant.with_tenant(tenant) { okta.destroy! }
+
+      expect(tenant.reload.default_identity_provider_id).to be_nil
+    end
+  end
+
   describe "#host" do
     it "is the subdomain under the app's root domain" do
       expect(build(:tenant, subdomain: "acme").host).to eq("acme.localhost")
