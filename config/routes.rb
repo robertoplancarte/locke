@@ -28,33 +28,33 @@ Rails.application.routes.draw do
     post "sign_in", to: "sessions#create"
     get  "sign_up", to: "registrations#new"
     post "sign_up", to: "registrations#create"
-    resources :sessions, only: [:index, :show, :destroy]
-    resource  :password, only: [:edit, :update]
+    resources :sessions, only: [ :index, :show, :destroy ]
+    resource  :password, only: [ :edit, :update ]
     resource  :account, only: %i[show edit update] do
       scope module: :accounts do
         resource :security, only: :show
         resource :activity, only: :show
       end
     end
-    resources :identities, only: [:index, :destroy]
+    resources :identities, only: [ :index, :destroy ]
     namespace :identity do
-      resource :email,              only: [:edit, :update]
-      resource :email_verification, only: [:show, :create]
-      resource :password_reset,     only: [:new, :edit, :create, :update]
+      resource :email,              only: [ :edit, :update ]
+      resource :email_verification, only: [ :show, :create ]
+      resource :password_reset,     only: [ :new, :edit, :create, :update ]
     end
     namespace :authentications do
       resources :events, only: :index
     end
     namespace :two_factor_authentication do
       namespace :challenge do
-        resource :security_keys,  only: [:new, :create]
-        resource :totp,           only: [:new, :create]
-        resource :recovery_codes, only: [:new, :create]
+        resource :security_keys,  only: [ :new, :create ]
+        resource :totp,           only: [ :new, :create ]
+        resource :recovery_codes, only: [ :new, :create ]
       end
       namespace :profile do
         resources :security_keys
-        resource  :totp,           only: [:new, :create, :update]
-        resources :recovery_codes, only: [:index, :create]
+        resource  :totp,           only: [ :new, :create, :update ]
+        resources :recovery_codes, only: [ :index, :create ]
       end
     end
     get  "/auth/failure",            to: "sessions/omniauth#failure"
@@ -65,10 +65,10 @@ Rails.application.routes.draw do
       constraints: { protocol: /oidc|saml/, identity_provider_id: /\d+/ }
     get "/auth/saml/:identity_provider_id/metadata", to: "identity_providers/saml_metadata#show", as: :saml_metadata
     post "users/:user_id/masquerade", to: "masquerades#create", as: :user_masquerade
-    resource :invitation, only: [:new, :create]
+    resource :invitation, only: [ :new, :create ]
     namespace :sessions do
-      resource :passwordless, only: [:edit, :create]
-      resource :sudo, only: [:new, :create]
+      resource :passwordless, only: [ :edit, :create ]
+      resource :sudo, only: [ :new, :create ]
     end
 
     root "home#index"
