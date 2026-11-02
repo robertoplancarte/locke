@@ -5,7 +5,7 @@ class PasswordsController < ApplicationController
   end
 
   def update
-    if @user.update(user_params)
+    if @user.change_password(user_params, keeping: Current.session)
       redirect_to root_path, notice: "Your password has been changed"
     else
       render :edit, status: :unprocessable_entity

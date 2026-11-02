@@ -78,4 +78,32 @@ RSpec.describe User, type: :model do
       expect(user.tap(&:validate).errors[:theme]).to be_present
     end
   end
+
+  describe "#change_password" do
+    let_it_be(:tenant) { create(:tenant) }
+    let_it_be(:user, refind: true) { create(:user, tenant:) }
+    let_it_be(:here) { create(:session, user:) }
+    let_it_be(:elsewhere) { create(:session, user:) }
+
+    around { |example| ActsAsTenant.with_tenant(tenant) { example.run } }
+
+    it "logs out every other session, keeping the one it was changed from" do
+      expect(user.change_password({ password: "a new long password" }, keeping: here)).to be(true)
+
+      expect(user.sessions).to contain_exactly(here)
+      expect(user.events.pluck(:action)).to include("password_changed")
+    end
+
+    it "logs out every session when changed without one, as from a reset link" do
+      user.change_password({ password: "a new long password" })
+
+      expect(user.sessions).to be_empty
+    end
+
+    it "keeps every session when the password isn't accepted" do
+      expect(user.change_password({ password: "short" })).to be(false)
+
+      expect(user.sessions).to contain_exactly(here, elsewhere)
+    end
+  end
 end
