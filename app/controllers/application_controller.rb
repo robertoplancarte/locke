@@ -39,6 +39,8 @@ class ApplicationController < ActionController::Base
     if session_record = find_session_record
       Current.session = session_record
     else
+      # Pages people open, not form posts or fetches, are worth coming back to after signing in
+      session[:return_to] = request.fullpath if request.get? && request.format.html?
       redirect_to sign_in_path
     end
   end

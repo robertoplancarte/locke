@@ -47,7 +47,10 @@
 
     <div class="mt-6 flex flex-col gap-3">
       <% identity_providers.each do |identity_provider| %>
-        <%= button_to identity_provider.name, identity_provider.auth_path, data: { turbo: false }, form_class: "w-full", class: provider_button_class %>
+        <%# A SAML provider hands RelayState back with its response, which is how return_to survives it %>
+        <% relay_state = { RelayState: session[:return_to] }.compact if identity_provider.saml? %>
+        <%= button_to identity_provider.name, identity_provider.auth_path, params: relay_state || {},
+              data: { turbo: false }, form_class: "w-full", class: provider_button_class %>
       <% end %>
       <% if developer_sign_in %>
         <%= button_to "/auth/developer", data: { turbo: false }, form_class: "w-full", class: provider_button_class do %>

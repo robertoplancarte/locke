@@ -18,8 +18,8 @@ class CreateUsers < ActiveRecord::Migration[8.1]
       t.timestamps
 
       # The same email can sign up separately on each tenant
-      t.index [:tenant_id, :email], unique: true
-      t.index [:tenant_id, :provider, :uid], unique: true, where: "provider IS NOT NULL"
+      t.index [ :tenant_id, :email ], unique: true
+      t.index [ :tenant_id, :provider, :uid ], unique: true, where: "provider IS NOT NULL"
     end
   end
 end

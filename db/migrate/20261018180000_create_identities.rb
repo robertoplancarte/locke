@@ -10,7 +10,7 @@ class CreateIdentities < ActiveRecord::Migration[8.1]
 
       t.timestamps
 
-      t.index [:tenant_id, :provider, :uid], unique: true
+      t.index [ :tenant_id, :provider, :uid ], unique: true
     end
 
     execute <<~SQL
@@ -19,7 +19,7 @@ class CreateIdentities < ActiveRecord::Migration[8.1]
     SQL
 
     change_table :users, bulk: true do |t|
-      t.remove_index [:tenant_id, :provider, :uid]
+      t.remove_index [ :tenant_id, :provider, :uid ]
       t.remove :provider, :uid
     end
   end
@@ -29,7 +29,7 @@ class CreateIdentities < ActiveRecord::Migration[8.1]
     change_table :users, bulk: true do |t|
       t.string :provider
       t.string :uid
-      t.index [:tenant_id, :provider, :uid], unique: true, where: "provider IS NOT NULL"
+      t.index [ :tenant_id, :provider, :uid ], unique: true, where: "provider IS NOT NULL"
     end
 
     execute <<~SQL

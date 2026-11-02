@@ -1,4 +1,6 @@
 class Sessions::PasswordlessesController < ApplicationController
+  include SignsIn
+
   skip_before_action :authenticate
 
   rate_limit to: 10, within: 1.hour, only: :create, with: -> { redirect_to sign_in_path, alert: "Try again later" }
@@ -6,10 +8,9 @@ class Sessions::PasswordlessesController < ApplicationController
   before_action :set_user, only: :edit
 
   def edit
-    session_record = @user.sessions.create!
-    cookies.signed.permanent[:session_token] = { value: session_record.id, httponly: true }
-
-    revoke_tokens; redirect_to(root_path, notice: "Signed in successfully")
+    # Used up even when a second factor is still owed: the link proved the email once
+    revoke_tokens
+    begin_sign_in SignIn.new(@user, method: :email)
   end
 
   def create
