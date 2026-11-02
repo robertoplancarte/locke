@@ -6,10 +6,11 @@
   Someone signing in with a provider for the first time gets an account, or is signed in to the existing account with the same email.
 </p>
 
+<%# Under params: a bare protocol: is url_for's own option (http or https), so it never reaches the query string %>
 <div class="mt-8 flex flex-wrap gap-3">
-  <%= link_to "Add OIDC provider", new_settings_identity_provider_path(protocol: "oidc"),
+  <%= link_to "Add OIDC provider", new_settings_identity_provider_path(params: { protocol: "oidc" }),
         class: "rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
-  <%= link_to "Add SAML provider", new_settings_identity_provider_path(protocol: "saml"),
+  <%= link_to "Add SAML provider", new_settings_identity_provider_path(params: { protocol: "saml" }),
         class: "rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50" %>
 </div>
 

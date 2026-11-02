@@ -21,6 +21,22 @@ RSpec.describe "Settings: identity providers", type: :request do
       expect(response.body).to include("Okta")
       expect(response.body).not_to include("Someone else&#39;s")
     end
+
+    it "links to the form for each protocol" do
+      get settings_identity_providers_path
+
+      expect(response.body).to include(%(href="/settings/identity_providers/new?protocol=oidc"))
+      expect(response.body).to include(%(href="/settings/identity_providers/new?protocol=saml"))
+    end
+  end
+
+  describe "GET /settings/identity_providers/new" do
+    it "shows the SAML form for a SAML provider" do
+      get new_settings_identity_provider_path(params: { protocol: "saml" })
+
+      expect(response.body).to include("Add SAML provider", "Single sign-on URL")
+      expect(response.body).not_to include("Client ID")
+    end
   end
 
   describe "POST /settings/identity_providers" do
