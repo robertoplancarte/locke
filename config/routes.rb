@@ -80,6 +80,9 @@ Rails.application.routes.draw do
       controllers authorizations: "oauth/authorizations"
     end
     use_doorkeeper_openid_connect
+    # OIDC RP-Initiated Logout: apps send people here by GET or POST; the confirmation deletes
+    match "oauth/logout", to: "oauth/logouts#show", via: %i[get post], as: :oauth_logout
+    delete "oauth/logout", to: "oauth/logouts#destroy"
 
     root "home#index"
   end

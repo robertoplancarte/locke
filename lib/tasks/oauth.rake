@@ -13,6 +13,16 @@ namespace :oauth do
       ActsAsTenant.with_tenant(tenant) { print_app OauthApplication.create!(name: args.fetch(:name), redirect_uri: args.fetch(:redirect_uri)) }
     end
 
+    desc "Set where an app hears about and returns from logouts: oauth:app:logout[client_id,https://app.example.com/backchannel_logout,https://app.example.com/signed_out]"
+    task :logout, %i[client_id backchannel_logout_uri post_logout_redirect_uri] => :environment do |_task, args|
+      ActsAsTenant.without_tenant do
+        app = OauthApplication.find_by!(uid: args.fetch(:client_id))
+        app.update!(backchannel_logout_uri: args[:backchannel_logout_uri], post_logout_redirect_uris: [ args[:post_logout_redirect_uri] ])
+        puts "#{app.name}: back-channel logout to #{app.backchannel_logout_uri || "nowhere"}, " \
+          "returns to #{app.post_logout_redirect_uris.first || "Locke's sign-in page"} after logout"
+      end
+    end
+
     def print_app(app)
       puts "#{app.name} (#{app.global? ? "every tenant" : app.tenant.subdomain})"
       puts "  client_id:     #{app.uid}"

@@ -6,7 +6,7 @@ module TenantFromHost
   included do
     set_current_tenant_through_filter
     before_action :set_tenant_from_host
-    before_action { Current.oidc_issuer = oidc_issuer if current_tenant }
+    before_action { Current.oidc_issuer = current_tenant.oidc_issuer(**Rails.configuration.x.public_url_options) if current_tenant }
   end
 
   private
@@ -28,11 +28,5 @@ module TenantFromHost
     def redirect_to_current_host(tenant)
       url = URI(request.url).tap { it.host = tenant.host }.to_s
       redirect_to url, allow_other_host: true, status: request.get? || request.head? ? :found : :temporary_redirect
-    end
-
-    # Where this tenant's OpenID Connect issuer lives: its canonical host, on
-    # the scheme and port this request came in on
-    def oidc_issuer
-      "#{request.protocol}#{current_tenant.canonical_host}#{request.port_string}"
     end
 end

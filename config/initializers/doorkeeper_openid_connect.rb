@@ -31,6 +31,9 @@ Doorkeeper::OpenidConnect.configure do
     redirect_to sign_in_path, notice: "Sign in again to continue"
   end
 
+  # OIDC RP-Initiated Logout (Oauth::LogoutsController)
+  end_session_endpoint { "#{Current.oidc_issuer}/oauth/logout" }
+
   # One account per browser session, so there's nothing to choose between
   select_account_for_resource_owner { |_user, _return_to| }
 
@@ -40,5 +43,19 @@ Doorkeeper::OpenidConnect.configure do
     claim(:name, scope: :profile, response: [ :id_token, :user_info ]) { |user| user.display_name }
     # How the user signed in (RFC 8176), from the session the token came from
     claim(:amr, scope: :openid, response: [ :id_token ]) { |_user, _scopes, access_token| access_token.session&.amr.presence }
+    # The session the token came from, as logout tokens name it (OIDC Back-Channel Logout)
+    claim(:sid, scope: :openid, response: [ :id_token ]) { |_user, _scopes, access_token| access_token.session&.sid }
   end
+end
+
+# Discovery doesn't know about back-channel logout; Session#log_out sends logout
+# tokens with sid to every app that registered a backchannel_logout_uri
+module AdvertiseBackchannelLogout
+  private
+    def provider_response
+      super.merge(backchannel_logout_supported: true, backchannel_logout_session_supported: true)
+    end
+end
+Rails.application.config.to_prepare do
+  Doorkeeper::OpenidConnect::DiscoveryController.prepend(AdvertiseBackchannelLogout)
 end

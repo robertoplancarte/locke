@@ -42,6 +42,28 @@ RSpec.describe SignIn do
       expect(session.amr).to eq(%w[pwd otp mfa])
     end
 
+    context "when the user signs in again in the same browser" do
+      let(:previous) { user.sessions.create!(amr: [ "fed" ]) }
+
+      it "refreshes that session instead of starting another" do
+        session = described_class.new(user, method: :pwd).complete!(replacing: previous)
+
+        expect(session).to eq(previous)
+        expect(session.reload.amr).to eq([ "pwd" ])
+      end
+    end
+
+    context "when someone else was signed in in this browser" do
+      let(:previous) { user_with_2fa.sessions.create! }
+
+      it "starts a session of the user's own" do
+        session = described_class.new(user, method: :pwd).complete!(replacing: previous)
+
+        expect(session).to be_persisted.and have_attributes(user:)
+        expect(session).not_to eq(previous)
+      end
+    end
+
     it "refuses while a second factor is owed" do
       expect { described_class.new(user_with_2fa, method: :email).complete! }.to raise_error(/second factor/)
       expect(Session.where(user: user_with_2fa)).to be_empty

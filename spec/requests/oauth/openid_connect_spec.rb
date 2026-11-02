@@ -57,7 +57,8 @@ RSpec.describe "OAuth: OpenID Connect", type: :request do
     claims = id_token_claims(tokens.fetch("id_token"))
     expect(claims).to include(
       "iss" => "http://acme.localhost", "aud" => mail.uid, "sub" => ada.public_id, "nonce" => "n-0S6",
-      "email" => "ada@example.com", "email_verified" => true, "amr" => [ "pwd" ]
+      "email" => "ada@example.com", "email_verified" => true, "amr" => [ "pwd" ],
+      "sid" => ActsAsTenant.with_tenant(acme) { ada.sessions.sole.sid }
     )
     expect(claims["auth_time"]).to be_within(5).of(Time.current.to_i)
     expect(tokens).to include("access_token", "refresh_token")
@@ -200,7 +201,9 @@ RSpec.describe "OAuth: OpenID Connect", type: :request do
       expect(response.parsed_body).to include(
         "issuer" => "http://globex.localhost",
         "authorization_endpoint" => "http://globex.localhost/oauth/authorize",
-        "jwks_uri" => "http://globex.localhost/oauth/discovery/keys"
+        "jwks_uri" => "http://globex.localhost/oauth/discovery/keys",
+        "end_session_endpoint" => "http://globex.localhost/oauth/logout",
+        "backchannel_logout_supported" => true, "backchannel_logout_session_supported" => true
       )
     end
 

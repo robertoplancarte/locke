@@ -65,8 +65,8 @@ class User < ApplicationRecord
   end
 
   after_update if: :password_digest_previously_changed? do
-    # destroy, not delete: each ending is logged, and apps signed in through it will need telling
-    sessions.where.not(id: Current.session).destroy_all
+    # Each one logged out properly: its tokens revoked, and its apps told
+    sessions.where.not(id: Current.session).find_each(&:log_out)
   end
 
   after_update if: :email_previously_changed? do

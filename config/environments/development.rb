@@ -39,6 +39,7 @@ Rails.application.configure do
 
   # Set localhost to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  config.x.public_url_options = { protocol: ENV.fetch("APP_PROTOCOL", "http"), port: ENV.fetch("APP_PORT", 3000).to_i }
 
   # Keep sent emails in tmp/letter_opener instead of delivering them; read them at /letter_opener
   config.action_mailer.delivery_method = :letter_opener_web

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_02_110200) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -133,6 +133,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_110200) do
     t.boolean "confidential", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "backchannel_logout_uri"
+    t.string "post_logout_redirect_uris", default: [], null: false, array: true
     t.index ["tenant_id"], name: "index_oauth_applications_on_tenant_id"
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true
   end
@@ -183,7 +185,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_110200) do
     t.datetime "authenticated_at", null: false
     t.string "amr", default: [], null: false, array: true
     t.bigint "identity_provider_id"
+    t.string "sid", null: false
     t.index ["identity_provider_id"], name: "index_sessions_on_identity_provider_id"
+    t.index ["sid"], name: "index_sessions_on_sid", unique: true
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
