@@ -24,12 +24,7 @@
             <%= link_to "Apps", settings_applications_path, class: "opacity-80 hover:opacity-100" %>
           </nav>
 
-          <% if Current.user %>
-            <%= link_to account_path, class: "ms-auto -m-1.5 p-1.5", title: Current.user.display_name do %>
-              <span class="sr-only">Your account</span>
-              <span aria-hidden="true" class="flex size-8 items-center justify-center rounded-full bg-brand-secondary-foreground/15 text-xs font-semibold ring-1 ring-brand-secondary-foreground/25"><%= Current.user.initials %></span>
-            <% end %>
-          <% end %>
+          <%= render "account_menu" if Current.user %>
         </div>
       </header>
     <% end %>
