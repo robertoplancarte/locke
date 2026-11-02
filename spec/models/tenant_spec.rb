@@ -78,6 +78,69 @@ RSpec.describe Tenant, type: :model do
 
       it { is_expected.to be_invalid }
     end
+
+    context "with a PNG favicon" do
+      before { tenant.favicon.attach(fixture_file_upload("square_icon.png", "image/png")) }
+
+      it { is_expected.to be_valid }
+    end
+
+    context "with a non-image favicon" do
+      before { tenant.favicon.attach(io: StringIO.new("not an image"), filename: "icon.txt", content_type: "text/plain") }
+
+      it { is_expected.to be_invalid }
+    end
+  end
+
+  describe "#icon_image" do
+    subject(:icon_image) { tenant.icon_image }
+
+    let(:tenant) { create(:tenant) }
+
+    context "with a favicon and a logo" do
+      before do
+        tenant.logo.attach(fixture_file_upload("wide_logo.png", "image/png"))
+        tenant.favicon.attach(fixture_file_upload("square_icon.png", "image/png"))
+      end
+
+      it("prefers the favicon") { expect(icon_image.name).to eq("favicon") }
+    end
+
+    context "with only a logo" do
+      before { tenant.logo.attach(fixture_file_upload("wide_logo.png", "image/png")) }
+
+      it("falls back to the logo") { expect(icon_image.name).to eq("logo") }
+    end
+
+    context "with neither" do
+      it { is_expected.to be_nil }
+    end
+  end
+
+  describe "icon variants" do
+    let(:tenant) { create(:tenant) }
+
+    before { tenant.logo.attach(fixture_file_upload("wide_logo.png", "image/png")) }
+
+    def processed(variant_name)
+      Vips::Image.new_from_buffer(tenant.logo.variant(variant_name).processed.download, "")
+    end
+
+    it "pads a wide logo into a transparent 32px square" do
+      icon = processed(:favicon)
+
+      expect([ icon.width, icon.height, icon.has_alpha? ]).to eq([ 32, 32, true ])
+      expect(icon.getpoint(0, 0).last).to eq(0)
+      expect(icon.getpoint(16, 16)).to eq([ 220, 38, 38, 255 ])
+    end
+
+    it "pads a wide logo into an opaque white 180px square" do
+      icon = processed(:apple_touch_icon)
+
+      expect([ icon.width, icon.height, icon.has_alpha? ]).to eq([ 180, 180, false ])
+      expect(icon.getpoint(0, 0)).to eq([ 255, 255, 255 ])
+      expect(icon.getpoint(90, 90)).to eq([ 220, 38, 38 ])
+    end
   end
 
   describe ".find_by_host" do

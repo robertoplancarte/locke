@@ -41,5 +41,25 @@
     <p class="mt-1 text-sm text-gray-500">PNG, JPEG or WebP, up to 2 MB.</p>
   </div>
 
+  <div>
+    <%= form.label :favicon, "Browser icon", class: "block text-sm font-medium" %>
+    <% if @tenant.favicon.attached? && @tenant.favicon.persisted? %>
+      <div class="mt-2 flex items-center gap-4">
+        <%= image_tag @tenant.favicon.variant(:favicon), alt: "Current browser icon", width: 32, height: 32,
+              class: "rounded border border-gray-200 bg-gray-50 p-1 box-content" %>
+        <label class="flex items-center gap-2 text-sm">
+          <%= check_box_tag "tenant[remove_favicon]", "1", false %>
+          Remove browser icon
+        </label>
+      </div>
+    <% end %>
+    <%= form.file_field :favicon, accept: Tenant::LOGO_CONTENT_TYPES.join(","), aria: { describedby: "favicon_hint" },
+          class: "mt-2 block text-sm file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-gray-300 file:bg-white file:px-3 file:py-1.5 file:text-sm hover:file:bg-gray-50" %>
+    <p id="favicon_hint" class="mt-1 text-sm text-gray-500">
+      Optional. A square image for browser tabs and home screens, shown at 32 pixels, so keep it simple.
+      Without one, your logo is used, shrunk to fit a square. PNG, JPEG or WebP, up to 2 MB.
+    </p>
+  </div>
+
   <%= form.submit "Save branding", class: "cursor-pointer rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:opacity-90" %>
 <% end %>
