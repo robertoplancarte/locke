@@ -40,7 +40,7 @@ class SessionsController < ApplicationController
 
   private
     def redirect_signed_in_user
-      redirect_to root_path if find_session_record
+      redirect_to root_path if find_session_record && !session[:reauthenticate]
     end
 
     def set_session

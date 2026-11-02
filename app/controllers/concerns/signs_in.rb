@@ -18,8 +18,11 @@ module SignsIn
     # caller (the security key challenge answers with JSON)
     def complete_sign_in(sign_in)
       return_to = session[:return_to]
+      # Signing in again (an app asked for prompt=login or max_age) replaces the old session
+      previous_session = find_session_record
       # A fresh Rails session, so nothing planted before sign-in carries over into it
       reset_session
+      previous_session.destroy if previous_session&.user_id == sign_in.user.id
 
       cookies.signed.permanent[:session_token] = { value: sign_in.complete!.id, httponly: true }
       local_path(return_to) || root_path
