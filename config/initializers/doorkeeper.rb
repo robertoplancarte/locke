@@ -50,7 +50,7 @@ Doorkeeper.configure do
   enforce_configured_scopes
 
   # Which Locke session a grant came from, carried from grant to token to
-  # refreshed token. OauthAccessGrant sets it from the signed-in session.
+  # refreshed token. Oauth::AuthorizationsController sets it from the signed-in session.
   custom_access_token_attributes [ :session_id ]
 
   access_token_methods :from_bearer_authorization

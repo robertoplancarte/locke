@@ -181,6 +181,17 @@ RSpec.describe "OAuth: OpenID Connect", type: :request do
     expect(session_ids).to eq([ ActsAsTenant.with_tenant(acme) { ada.sessions.sole.id } ])
   end
 
+  it "records the signed-in session on the code, whatever the client asks for" do
+    other_session = ActsAsTenant.with_tenant(acme) { ada.sessions.create! }
+    on acme
+    sign_in_as ada
+
+    authorize(session_id: other_session.id)
+
+    grant = ActsAsTenant.with_tenant(acme) { OauthAccessGrant.sole }
+    expect(grant.session).to eq(ActsAsTenant.with_tenant(acme) { ada.sessions.where.not(id: other_session).sole })
+  end
+
   describe "discovery" do
     it "publishes the tenant's issuer and endpoints" do
       on globex
