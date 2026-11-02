@@ -1,3 +1,5 @@
+# Where a provider sends the user back. Which account that is, and whether it
+# can be created, is ProviderAccount's call; this turns the answer into a response.
 class Sessions::OmniauthController < ApplicationController
   include SignsIn
 
@@ -10,28 +12,14 @@ class Sessions::OmniauthController < ApplicationController
   before_action :require_verified_email, only: :create
   before_action :restore_return_to, only: :create, if: -> { identity_provider&.saml? }
 
-  # Matching accounts by email is only safe because every configured provider
-  # verifies the emails it returns; otherwise anyone could claim an account by asserting its email.
-  # Providers a tenant registers are trusted with its own accounts, as the tenant chose them.
   def create
     return link if linking?
 
-    if identity = Identity.find_by(omniauth_params)
-      identity.update!(email: omniauth.info.email)
-      sign_in identity.user
-    elsif user = User.find_by(email: omniauth.info.email)
-      user.verified = true
-      user.identities.build(identity_params)
-      sign_in user
-    elsif session_record = find_session_record
-      identity = session_record.user.identities.create!(identity_params)
-      redirect_to identities_path, notice: "#{identity.label} is now linked to your account"
-    elsif creates_users?
-      user = User.new(user_params)
-      user.identities.build(identity_params)
-      sign_in user
-    else
-      redirect_to sign_in_path, alert: "#{current_tenant.name} isn't accepting sign-ups. Ask for an invitation."
+    match = provider_account.match(signed_in_user: find_session_record&.user)
+    case match.outcome
+    when :sign_in then sign_in match.user
+    when :linked then redirect_to identities_path, notice: "#{match.identity.label} is now linked to your account"
+    when :closed then redirect_to sign_in_path, alert: "#{current_tenant.name} isn't accepting sign-ups. Ask for an invitation."
     end
   end
 
@@ -55,7 +43,7 @@ class Sessions::OmniauthController < ApplicationController
         return redirect_to sign_in_path, alert: "Sign in again to link your account"
       end
 
-      if identity = Identity.link(user, **identity_params)
+      if identity = Identity.link(user, email: provider_account.email, **provider_account.key)
         redirect_to linked_identity_path(identity)
       else
         redirect_to account_security_path, alert: "That account is already linked to someone else"
@@ -84,12 +72,6 @@ class Sessions::OmniauthController < ApplicationController
       end
     end
 
-    # A tenant's own provider has its own switch, as tenants that turn sign-ups off
-    # often still want their provider to create accounts; the app's providers follow sign-ups.
-    def creates_users?
-      identity_provider ? identity_provider.creates_users? : current_tenant.sign_up_enabled?
-    end
-
     # A SAML provider posts back cross-site, so the browser leaves out the Lax session
     # cookie holding return_to; the sign-in page sent it along as RelayState instead.
     # It's checked for being a local path before it's used.
@@ -97,17 +79,10 @@ class Sessions::OmniauthController < ApplicationController
       session[:return_to] ||= params[:RelayState].presence
     end
 
-    def user_params
-      { email: omniauth.info.email, password: SecureRandom.base58, verified: true }
-    end
-
-    # What identifies the provider account
-    def omniauth_params
-      { provider: omniauth.provider, uid: omniauth.uid, identity_provider: }
-    end
-
-    def identity_params
-      omniauth_params.merge(email: omniauth.info.email)
+    def provider_account
+      @provider_account ||= ProviderAccount.new(
+        tenant: current_tenant, provider: omniauth.provider, uid: omniauth.uid, email: omniauth.info.email, identity_provider:
+      )
     end
 
     def omniauth

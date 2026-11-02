@@ -19,6 +19,8 @@ RSpec.describe "Authentication: signing in with a provider", type: :request do
   def users = ActsAsTenant.with_tenant(tenant) { User.all }
   def identities_of(user) = ActsAsTenant.with_tenant(user.tenant) { user.identities.pluck(:provider, :uid) }
 
+  # Which account the provider account belongs to is ProviderAccount's call
+  # (spec/models/provider_account_spec.rb); these check the response to each outcome.
   it "signs up a new email with the identity" do
     expect { callback }.to change { users.count }.by(1)
 
@@ -28,60 +30,26 @@ RSpec.describe "Authentication: signing in with a provider", type: :request do
     expect(response).to redirect_to(root_path)
   end
 
-  it "doesn't sign up a new email when the tenant turned sign-ups off" do
-    tenant.update!(sign_up_enabled: false)
+  context "with an existing account" do
+    let_it_be(:ada) { create(:user, tenant:, email: "ada@example.com") }
 
-    expect { callback }.not_to change { users.count }
-    expect(response).to redirect_to(sign_in_path)
+    it "signs it in" do
+      expect { callback }.not_to change { users.count }
+
+      expect(ada.sessions).to exist
+      expect(response).to redirect_to(root_path)
+    end
   end
 
-  it "still signs in existing accounts when the tenant turned sign-ups off" do
-    tenant.update!(sign_up_enabled: false)
-    user = create(:user, tenant:, email: "ada@example.com")
+  context "when the tenant turned sign-ups off" do
+    before { tenant.update!(sign_up_enabled: false) }
 
-    callback
+    it "says it isn't accepting sign-ups" do
+      expect { callback }.not_to change { users.count }
 
-    expect(user.sessions).to exist
-  end
-
-  it "remembers the provider account's email, and keeps it current" do
-    user = create(:user, tenant:, email: "ada@example.com")
-    identity = create(:identity, user:, uid: "ada-uid", email: "old@example.com")
-
-    callback
-
-    expect(ActsAsTenant.with_tenant(tenant) { identity.reload.email }).to eq("ada@example.com")
-  end
-
-  it "signs in the user who owns the identity, even under a different email" do
-    user = create(:user, tenant:, email: "someone-else@example.com")
-    create(:identity, user:, uid: "ada-uid")
-
-    expect { callback }.not_to change { users.count }
-
-    expect(identities_of(user)).to eq([ [ "developer", "ada-uid" ] ])
-    expect(user.sessions).to exist
-    expect(response).to redirect_to(root_path)
-  end
-
-  it "links the identity to an existing account with the same email" do
-    user = create(:user, tenant:, email: "ada@example.com", verified: false)
-
-    expect { callback }.not_to change { users.count }
-
-    expect(user.reload).to be_verified
-    expect(identities_of(user)).to eq([ [ "developer", "ada-uid" ] ])
-    expect(user.sessions).to exist
-  end
-
-  it "keeps the user's other identities when linking another" do
-    user = create(:user, tenant:, email: "ada@example.com")
-    create(:identity, user:, provider: "github", uid: "ada-gh")
-
-    callback
-
-    expect(identities_of(user)).to contain_exactly([ "github", "ada-gh" ], [ "developer", "ada-uid" ])
-    expect(user.sessions).to exist
+      expect(response).to redirect_to(sign_in_path)
+      expect(flash[:alert]).to include("isn't accepting sign-ups")
+    end
   end
 
   context "when signed in" do
@@ -94,16 +62,6 @@ RSpec.describe "Authentication: signing in with a provider", type: :request do
 
       expect(identities_of(user)).to eq([ [ "developer", "ada-uid" ] ])
       expect(response).to redirect_to(identities_path)
-    end
-
-    it "signs in the account with the identity's email instead" do
-      ada = create(:user, tenant:, email: "ada@example.com")
-
-      callback
-
-      expect(identities_of(ada)).to eq([ [ "developer", "ada-uid" ] ])
-      expect(identities_of(user)).to be_empty
-      expect(response).to redirect_to(root_path)
     end
   end
 
@@ -149,13 +107,5 @@ RSpec.describe "Authentication: signing in with a provider", type: :request do
         expect(response).to redirect_to(sign_in_path)
       end
     end
-  end
-
-  it "doesn't link an account with the same email on another tenant" do
-    other = create(:user, email: "ada@example.com")
-
-    expect { callback }.to change { users.count }.by(1)
-
-    expect(identities_of(other)).to be_empty
   end
 end
