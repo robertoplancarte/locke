@@ -1,0 +1,80 @@
+<% content_for :title, "#{@application.name} · #{current_tenant.name}" %>
+
+<div class="flex flex-wrap items-start justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-semibold"><%= @application.name %></h1>
+    <p class="mt-1 text-sm text-gray-600">
+      <%= link_to "Apps", settings_applications_path, class: "underline" %>
+    </p>
+  </div>
+  <div class="flex gap-2">
+    <%= link_to "Edit", edit_settings_application_path(@application),
+          class: "rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50" %>
+    <%= button_to "Remove", settings_application_path(@application), method: :delete,
+          form: { data: { turbo_confirm: "Remove #{@application.name}? Everyone signed in to it through #{current_tenant.name} will be signed out." } },
+          class: "cursor-pointer rounded-md border border-red-200 bg-white px-3 py-1.5 text-sm text-red-700 hover:bg-red-50" %>
+  </div>
+</div>
+
+<section class="mt-8 rounded-lg border border-gray-200 bg-white p-6">
+  <h2 class="text-sm font-semibold">Credentials</h2>
+  <dl class="mt-4 space-y-3 text-sm">
+    <div>
+      <dt class="font-medium text-gray-900">Client ID</dt>
+      <dd id="client_id" class="mt-1 rounded bg-gray-50 px-3 py-2 font-mono text-xs break-all"><%= @application.uid %></dd>
+    </div>
+    <div>
+      <dt class="font-medium text-gray-900">Client secret</dt>
+      <% if !@application.confidential? %>
+        <dd class="mt-1 text-gray-500">None: a public client signs in with PKCE alone.</dd>
+      <% elsif (client_secret = flash[:client_secret]) %>
+        <dd id="client_secret" class="mt-1 rounded border border-yellow-200 bg-yellow-50 px-3 py-2 font-mono text-xs break-all"><%= client_secret %></dd>
+        <dd class="mt-1 text-xs text-yellow-800">Shown only this once. Store it in the app's configuration now.</dd>
+      <% else %>
+        <dd class="mt-1 flex flex-wrap items-center gap-3 text-gray-500">
+          Only shown when it's generated.
+          <%= button_to "Generate new secret", settings_application_secret_path(@application),
+                form: { data: { turbo_confirm: "Generate a new secret for #{@application.name}? The current one stops working right away." } },
+                class: "cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 hover:bg-gray-50" %>
+        </dd>
+      <% end %>
+    </div>
+  </dl>
+</section>
+
+<section class="mt-8 rounded-lg border border-gray-200 bg-white p-6">
+  <h2 class="text-sm font-semibold">Set up OpenID Connect in the app</h2>
+  <p class="mt-1 text-sm text-gray-500">
+    Use the authorization code flow with PKCE (S256), and the <span class="font-mono">openid</span> scope,
+    plus <span class="font-mono">profile</span> and <span class="font-mono">email</span> if the app needs them.
+    Most libraries only need the issuer and read the rest from the discovery document.
+  </p>
+  <dl class="mt-4 space-y-3 text-sm">
+    <% { "Issuer" => Current.oidc_issuer, "Discovery document" => "#{Current.oidc_issuer}/.well-known/openid-configuration" }.each do |label, value| %>
+      <div>
+        <dt class="font-medium text-gray-900"><%= label %></dt>
+        <dd class="mt-1 rounded bg-gray-50 px-3 py-2 font-mono text-xs break-all"><%= value %></dd>
+      </div>
+    <% end %>
+  </dl>
+</section>
+
+<section class="mt-8 rounded-lg border border-gray-200 bg-white p-6">
+  <h2 class="text-sm font-semibold">Settings</h2>
+  <dl class="mt-4 space-y-3 text-sm">
+    <% { "Redirect URIs" => @application.redirect_uri.split,
+         "Back-channel logout URI" => Array(@application.backchannel_logout_uri),
+         "Post-logout redirect URIs" => @application.post_logout_redirect_uris }.each do |label, uris| %>
+      <div>
+        <dt class="font-medium text-gray-900"><%= label %></dt>
+        <% if uris.any? %>
+          <% uris.each do |uri| %>
+            <dd class="mt-1 rounded bg-gray-50 px-3 py-2 font-mono text-xs break-all"><%= uri %></dd>
+          <% end %>
+        <% else %>
+          <dd class="mt-1 text-gray-500">None</dd>
+        <% end %>
+      </div>
+    <% end %>
+  </dl>
+</section>

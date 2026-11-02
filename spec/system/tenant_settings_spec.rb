@@ -68,4 +68,21 @@ RSpec.describe "Tenant settings", type: :system do
     expect(page).to have_text("portal.acme.com is being removed.")
     expect(page).to have_text("Removing")
   end
+
+  it "registers an app and shows its secret once" do
+    visit "/settings/branding/edit"
+    within("header") { click_on "Apps" }
+    click_on "Register an app"
+
+    fill_in "Name", with: "Intranet"
+    fill_in "Redirect URIs", with: "https://intranet.acme.com/callback"
+    click_on "Register app"
+
+    expect(page).to have_text("Intranet registered.")
+    expect(page).to have_css("#client_secret")
+
+    visit current_path
+    expect(page).to have_no_css("#client_secret")
+    expect(page).to have_button("Generate new secret")
+  end
 end

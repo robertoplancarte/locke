@@ -26,7 +26,8 @@ Doorkeeper.configure do
     end
   end
 
-  # Apps are registered by operators (bin/rails oauth:app:*), not self-service
+  # Doorkeeper's own app screens are off (config/routes.rb): tenants register
+  # theirs under Settings, and operators the global ones with bin/rails oauth:app:global
   admin_authenticator { head :forbidden }
 
   # Authorization code with PKCE only, for every client
