@@ -154,7 +154,7 @@ jobs:
         run: bin/rails db:test:prepare tailwindcss:build && bin/rspec spec/system
 
       - name: Keep screenshots and Playwright traces from failed system tests
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: system-test-failures
