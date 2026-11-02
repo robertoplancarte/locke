@@ -22,6 +22,12 @@ Rails.application.configure do
   config.consider_all_requests_local = true
   config.cache_store = :null_store
 
+  # Writing every query to log/test.log is the suite's biggest cheap cost.
+  # Run with TEST_LOG=debug to get the full log back while debugging.
+  config.log_level = ENV.fetch("TEST_LOG", "fatal").to_sym
+  config.active_record.verbose_query_logs = false
+  config.active_record.query_log_tags_enabled = false
+
   # Render exception templates for rescuable exceptions and raise for other exceptions.
   config.action_dispatch.show_exceptions = :rescuable
 

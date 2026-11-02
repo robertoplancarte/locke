@@ -2,6 +2,7 @@ require "rails_helper"
 
 # A tenant can send everyone straight to one of its providers. Locke's own form
 # stays behind ?local=1 (break-glass), and each sign-in that bypasses the provider is logged.
+# Which providers can be the default is covered in spec/models/tenant_spec.rb.
 RSpec.describe "Authentication: a tenant's default identity provider", type: :request do
   # Examples disable and delete them, so each starts from a fresh copy
   let_it_be(:tenant, refind: true) { create(:tenant, subdomain: "acme") }
@@ -47,13 +48,14 @@ RSpec.describe "Authentication: a tenant's default identity provider", type: :re
       expect(response.body).not_to include("auto-submit")
     end
 
-    it "shows the form for everyone once the provider is disabled" do
-      ActsAsTenant.with_tenant(tenant) { okta.update!(enabled: false) }
+    context "once the provider is disabled" do
+      before { ActsAsTenant.with_tenant(tenant) { okta.update!(enabled: false) } }
 
-      get sign_in_path
+      it "shows the form for everyone" do
+        get sign_in_path
 
-      expect(tenant.reload.default_identity_provider_id).to be_nil
-      expect(response.body).to include("Password")
+        expect(response.body).to include("Password")
+      end
     end
   end
 
@@ -65,15 +67,15 @@ RSpec.describe "Authentication: a tenant's default identity provider", type: :re
       expect(events_of(user)).to include("signed_in_without_default_provider")
     end
 
-    it "still asks users with 2FA for their second factor" do
-      ActsAsTenant.with_tenant(tenant) { user.update!(otp_required_for_sign_in: true) }
+    context "for a user with 2FA" do
+      let_it_be(:grace) { create(:user, tenant:, otp_required_for_sign_in: true) }
 
-      sign_in_as user
+      it "still asks for their second factor" do
+        sign_in_as grace
 
-      expect(response).to redirect_to(new_two_factor_authentication_challenge_totp_path)
-      expect(user.sessions).to be_empty
-    ensure
-      ActsAsTenant.with_tenant(tenant) { user.update!(otp_required_for_sign_in: false) }
+        expect(response).to redirect_to(new_two_factor_authentication_challenge_totp_path)
+        expect(grace.sessions).to be_empty
+      end
     end
 
     it "keeps the form after a wrong password" do
@@ -102,32 +104,13 @@ RSpec.describe "Authentication: a tenant's default identity provider", type: :re
     end
   end
 
-  describe "choosing it" do
-    let(:other_tenant) { create(:tenant) }
-
-    it "must be one of the tenant's own providers" do
-      foreign = create(:identity_provider, tenant: other_tenant)
-
-      expect(tenant.update(default_identity_provider_id: foreign.id)).to be(false)
-      expect(tenant.errors[:default_identity_provider]).to be_present
-    end
-
-    it "must be enabled" do
-      disabled = create(:identity_provider, tenant:, enabled: false)
-
-      expect(tenant.update(default_identity_provider_id: disabled.id)).to be(false)
-    end
-
-    it "falls back to Locke's form when the provider is deleted" do
-      ActsAsTenant.with_tenant(tenant) { okta.destroy! }
-
-      expect(tenant.reload.default_identity_provider_id).to be_nil
-    end
-
-    it "is set in the authentication settings" do
+  describe "choosing it in the authentication settings" do
+    before do
       tenant.update!(default_identity_provider: nil)
       sign_in_as user
+    end
 
+    it "saves it and offers another way to sign in" do
       patch settings_authentication_path, params: { tenant: { default_identity_provider_id: okta.id } }
 
       expect(tenant.reload.default_identity_provider_id).to eq(okta.id)
