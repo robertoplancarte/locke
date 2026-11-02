@@ -53,10 +53,19 @@ class SignIn
     self.class.new(user, amr: amr | [ method.to_s ], identity_provider:)
   end
 
-  def complete!
+  # Starts a session, or refreshes the user's own session in this browser when
+  # they sign in again (see Session#reauthenticate!)
+  def complete!(replacing: nil)
     raise "A second factor is still required" if second_factor_required?
 
-    user.sessions.create!(authenticated_at: Time.current, identity_provider:, amr: amr.many? ? amr | [ "mfa" ] : amr).tap do
+    amr = self.amr.many? ? self.amr | [ "mfa" ] : self.amr
+    session = if replacing&.user_id == user.id
+      replacing.tap { |previous| previous.reauthenticate!(amr:, identity_provider:) }
+    else
+      user.sessions.create!(authenticated_at: Time.current, identity_provider:, amr:)
+    end
+
+    session.tap do
       # Break-glass use: the tenant sends everyone to its provider, and this didn't come through it
       user.events.create!(action: "signed_in_without_default_provider") if bypassed_default_provider?
     end

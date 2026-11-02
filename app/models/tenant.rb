@@ -81,6 +81,12 @@ class Tenant < ApplicationRecord
     domains.active.order(:created_at).pick(:hostname) || host(root_domain:)
   end
 
+  # The tenant's OpenID Connect issuer: its canonical host, reached as configured
+  # in config.x.public_url_options, so requests and jobs agree on it
+  def oidc_issuer(protocol:, port: nil, root_domain: Rails.configuration.x.root_domain)
+    "#{protocol}://#{canonical_host(root_domain:)}#{":#{port}" if port}"
+  end
+
   def primary_brand_color = BrandColor.new(primary_color)
   def secondary_brand_color = BrandColor.new(secondary_color)
 

@@ -225,6 +225,15 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
+  describe "#oidc_issuer" do
+    let_it_be(:tenant) { create(:tenant, subdomain: "acme") }
+
+    it "is the canonical host on the configured scheme and port" do
+      expect(tenant.oidc_issuer(protocol: "https", root_domain: "locke.app")).to eq("https://acme.locke.app")
+      expect(tenant.oidc_issuer(protocol: "http", port: 3000, root_domain: "localhost")).to eq("http://acme.localhost:3000")
+    end
+  end
+
   describe "#host" do
     it "is the subdomain under the app's root domain" do
       expect(build(:tenant, subdomain: "acme").host).to eq("acme.localhost")

@@ -35,7 +35,7 @@ class SessionsController < ApplicationController
   end
 
   def destroy
-    @session.destroy; redirect_back_or_to(sessions_path, notice: "That session has been logged out")
+    @session.log_out; redirect_back_or_to(sessions_path, notice: "That session has been logged out")
   end
 
   private

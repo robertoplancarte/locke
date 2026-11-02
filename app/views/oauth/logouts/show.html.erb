@@ -1,0 +1,14 @@
+<% content_for :title, "Log out · #{current_tenant.name}" %>
+<% content_for :heading, "Log out of #{current_tenant.name}?" %>
+
+<p class="text-sm/6 text-gray-600">
+  <%= @end_session.application ? "#{@end_session.application.name} asked" : "You were asked" %> to log you out.
+  This logs you out of every app you signed in to with <%= current_tenant.name %>.
+</p>
+
+<div class="mt-6 flex flex-col gap-3">
+  <%= button_to "Log out", oauth_logout_path, method: :delete,
+        params: { client_id: @end_session.client_id, post_logout_redirect_uri: @end_session.post_logout_redirect_uri, state: @end_session.state }.compact,
+        class: "flex w-full cursor-pointer justify-center rounded-md bg-brand-primary px-3 py-1.5 text-sm/6 font-semibold text-brand-primary-foreground shadow-xs hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary" %>
+  <%= link_to "Stay signed in", root_path, class: "text-center text-sm/6 font-semibold text-brand-primary-text hover:opacity-80" %>
+</div>
