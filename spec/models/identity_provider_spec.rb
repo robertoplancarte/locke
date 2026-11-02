@@ -62,6 +62,16 @@ RSpec.describe IdentityProvider, type: :model do
     expect(identity_provider.reload.client_secret).to eq("s3cret")
   end
 
+  describe ".linkable" do
+    let_it_be(:oidc) { create(:identity_provider, tenant:) }
+    let_it_be(:disabled) { create(:identity_provider, tenant:, enabled: false) }
+    let_it_be(:saml) { create(:identity_provider, :saml, tenant:) }
+
+    it "is the enabled OIDC providers" do
+      expect(described_class.linkable).to contain_exactly(oidc)
+    end
+  end
+
   describe "#strategy_options" do
     subject(:options) { identity_provider.strategy_options("https://acme.example.com") }
 

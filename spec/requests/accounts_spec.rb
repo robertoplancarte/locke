@@ -42,18 +42,18 @@ RSpec.describe "Account", type: :request do
       expect(response.body).to include(edit_password_path, "Github", "ada@work.example", "Authenticator app")
     end
 
-    it "offers to link the tenant's OIDC providers in a new tab" do
-      oidc = create(:identity_provider, tenant:, name: "Okta")
-      saml = create(:identity_provider, :saml, tenant:, name: "Entra ID")
+    # Which providers are linkable is covered by IdentityProvider.linkable
+    context "with a provider to link" do
+      let_it_be(:identity_provider) { create(:identity_provider, tenant:, name: "Okta") }
 
-      get account_security_path
+      it "offers to link it in a new tab" do
+        get account_security_path
 
-      page = Nokogiri::HTML(response.body)
-      expect(page.at_css(%(form[action="#{oidc.auth_path}"][target="_blank"]))).to be_present
-      expect(page.at_css(%(form[action="#{oidc.auth_path}"] input[name="link"][value="1"]))).to be_present
-      expect(page.at_css(%(form[action="/auth/developer"][target="_blank"]))).to be_present
-      expect(page.at_css(%(form[action="#{saml.auth_path}"]))).to be_nil
-      expect(response.body).to include("Link Okta", "Link Developer")
+        page = Nokogiri::HTML(response.body)
+        expect(page.at_css(%(form[action="#{identity_provider.auth_path}"][target="_blank"] input[name="link"][value="1"]))).to be_present
+        expect(page.at_css(%(form[action="/auth/developer"][target="_blank"]))).to be_present
+        expect(response.body).to include("Link Okta", "Link Developer")
+      end
     end
 
     it "removes a sign-in provider and comes back" do

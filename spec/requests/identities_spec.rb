@@ -21,9 +21,10 @@ RSpec.describe "Identities", type: :request do
   end
 
   describe "GET /identities/:id/linked" do
-    it "says the provider account is linked, with a way back to settings" do
-      identity = create(:identity, user:, provider: "github", email: "ada@example.com")
+    let_it_be(:identity) { create(:identity, user:, provider: "github", email: "ada@example.com") }
+    let_it_be(:other_identity) { create(:identity, user: create(:user, tenant:)) }
 
+    it "says the provider account is linked, with a way back to settings" do
       get linked_identity_path(identity)
 
       expect(response).to have_http_status(:ok)
@@ -31,9 +32,7 @@ RSpec.describe "Identities", type: :request do
     end
 
     it "doesn't show another user's provider" do
-      identity = create(:identity, user: create(:user, tenant:))
-
-      get linked_identity_path(identity)
+      get linked_identity_path(other_identity)
 
       expect(response).to have_http_status(:not_found)
     end

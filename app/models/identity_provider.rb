@@ -24,6 +24,9 @@ class IdentityProvider < ApplicationRecord
   normalizes :name, :issuer, :client_id, :client_secret, :idp_entity_id, :idp_sso_url, :idp_certificate, with: ->(value) { value.strip.presence }
 
   scope :enabled, -> { where(enabled: true) }
+  # The ones a signed-in user can link from settings. A SAML provider answers with a cross-site
+  # POST, which comes without the session cookie that says who is linking.
+  scope :linkable, -> { enabled.oidc }
 
   # A disabled provider can't be the default: the sign-in page would send everyone to a dead end.
   # Deleting one clears it in the database (on_delete: :nullify).
