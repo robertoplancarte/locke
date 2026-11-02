@@ -150,7 +150,8 @@ jobs:
           DATABASE_URL: postgres://auth:password@localhost:5432
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare && bin/rspec spec/system
+        # test:prepare builds the CSS, but db:test:prepare doesn't, and the theme spec checks styles
+        run: bin/rails db:test:prepare tailwindcss:build && bin/rspec spec/system
 
       - name: Keep screenshots and Playwright traces from failed system tests
         uses: actions/upload-artifact@v4
