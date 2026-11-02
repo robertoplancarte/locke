@@ -16,9 +16,9 @@ class Sessions::PasswordlessesController < ApplicationController
   def create
     if @user = User.find_by(email: params[:email], verified: true)
       send_passwordless_email
-      redirect_to sign_in_path, notice: "Check your email for sign in instructions"
+      redirect_to local_sign_in_path, notice: "Check your email for sign in instructions"
     else
-      redirect_to sign_in_path(email_hint: params[:email]), alert: "You can't sign in until you verify your email"
+      redirect_to local_sign_in_path(email_hint: params[:email]), alert: "You can't sign in until you verify your email"
     end
   end
 

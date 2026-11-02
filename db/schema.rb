@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_02_090100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_02_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -163,6 +163,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_090100) do
     t.boolean "sign_in_links_enabled", default: true, null: false
     t.boolean "social_sign_in_enabled", default: true, null: false
     t.string "two_factor", default: "optional", null: false
+    t.bigint "default_identity_provider_id"
+    t.index ["default_identity_provider_id"], name: "index_tenants_on_default_identity_provider_id"
     t.index ["domain"], name: "index_tenants_on_domain", unique: true, where: "(domain IS NOT NULL)"
     t.index ["subdomain"], name: "index_tenants_on_subdomain", unique: true
   end
@@ -197,5 +199,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_090100) do
   add_foreign_key "sessions", "users"
   add_foreign_key "sign_in_tokens", "users"
   add_foreign_key "tenant_domains", "tenants"
+  add_foreign_key "tenants", "identity_providers", column: "default_identity_provider_id", on_delete: :nullify
   add_foreign_key "users", "tenants"
 end

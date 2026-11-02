@@ -1,0 +1,11 @@
+<%# The tenant signs everyone in with its own provider. Locke's form is still there at
+    ?local=1, for when the provider is down or misconfigured (break-glass). %>
+<p class="mb-6 text-center text-sm/6 text-gray-600">
+  <%= redirect ? "Taking you to #{identity_provider.name}…" : "#{current_tenant.name} signs in with #{identity_provider.name}." %>
+</p>
+
+<%= render "sessions/identity_provider_button", identity_provider:, label: "Continue with #{identity_provider.name}", auto_submit: redirect %>
+
+<p class="mt-6 text-center text-sm/6">
+  <%= link_to "Sign in another way", sign_in_path(local: 1), class: "font-semibold text-brand-primary-text hover:opacity-80" %>
+</p>

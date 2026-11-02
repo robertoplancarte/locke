@@ -14,7 +14,7 @@ module Settings
     private
 
     def authentication_params
-      params.expect(tenant: [ :sign_up_enabled, :sign_in_links_enabled, :social_sign_in_enabled, :two_factor ])
+      params.expect(tenant: [ :sign_up_enabled, :sign_in_links_enabled, :social_sign_in_enabled, :two_factor, :default_identity_provider_id ])
     end
   end
 end

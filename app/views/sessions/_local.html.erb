@@ -1,0 +1,64 @@
+<%# Locke's own sign-in: password, sign-in link and every enabled provider %>
+<% input_class = "block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-brand-primary sm:text-sm/6" %>
+
+<%# "Sign in" comes before the sign-in link button in the markup, so pressing Enter signs in;
+    the links row is moved above it visually with order-last on the button %>
+<%= form_with(url: sign_in_path, class: "flex flex-col gap-6") do |form| %>
+  <div>
+    <%= form.label :email, "Email address", class: "block text-sm/6 font-medium text-gray-900" %>
+    <div class="mt-2">
+      <%= form.email_field :email, value: params[:email_hint], required: true, autofocus: true, autocomplete: "email", class: input_class %>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :password, class: "block text-sm/6 font-medium text-gray-900" %>
+    <div class="mt-2">
+      <%= form.password_field :password, required: true, autocomplete: "current-password", class: input_class %>
+    </div>
+  </div>
+
+  <div class="order-last">
+    <%= form.submit "Sign in", class: "flex w-full cursor-pointer justify-center rounded-md bg-brand-primary px-3 py-1.5 text-sm/6 font-semibold text-brand-primary-foreground shadow-xs hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary" %>
+  </div>
+
+  <div class="flex items-center justify-between text-sm/6">
+    <% if current_tenant.sign_in_links_enabled? %>
+      <%# Sends the same form, typed email included, to the sign-in link endpoint; skips validation since no password is needed %>
+      <%= form.submit "Email me a sign-in link", formaction: sessions_passwordless_path, formnovalidate: true, class: "cursor-pointer font-semibold text-brand-primary-text hover:opacity-80" %>
+    <% end %>
+    <%# ms-auto keeps it on the right when it's alone in the row %>
+    <%= link_to "Forgot password?", new_identity_password_reset_path, class: "ms-auto font-semibold text-brand-primary-text hover:opacity-80" %>
+  </div>
+<% end %>
+
+<%# The tenant's own identity providers, plus the app's from config/initializers/omniauth.rb %>
+<% identity_providers = current_tenant.identity_providers.enabled.order(:created_at) %>
+<% developer_sign_in = current_tenant.social_sign_in_enabled? && !Rails.env.production? %>
+<% if identity_providers.any? || developer_sign_in %>
+  <div>
+    <div class="mt-10 flex items-center gap-x-6">
+      <div class="w-full flex-1 border-t border-gray-200"></div>
+      <p class="text-sm/6 font-medium text-nowrap text-gray-900">Or continue with</p>
+      <div class="w-full flex-1 border-t border-gray-200"></div>
+    </div>
+
+    <div class="mt-6 flex flex-col gap-3">
+      <% identity_providers.each do |identity_provider| %>
+        <%= render "sessions/identity_provider_button", identity_provider:, label: identity_provider.name %>
+      <% end %>
+      <% if developer_sign_in %>
+        <%= button_to "/auth/developer", data: { turbo: false }, form_class: "w-full", class: IdentityProvider::BUTTON_CLASS do %>
+          Developer
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if current_tenant.sign_up_enabled? %>
+  <% content_for :footer do %>
+    Don't have an account?
+    <%= link_to "Sign up", sign_up_path, class: "font-semibold text-brand-primary-text hover:opacity-80" %>
+  <% end %>
+<% end %>
