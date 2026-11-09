@@ -114,4 +114,4 @@ gem "omniauth-saml", "~> 2.2"
 
 # Locke as an OAuth 2.0 / OpenID Connect provider for apps
 gem "doorkeeper", "~> 5.8"
-gem "doorkeeper-openid_connect", "~> 1.8"
+gem "doorkeeper-openid_connect", "~> 2.1"
