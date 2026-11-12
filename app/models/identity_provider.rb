@@ -16,6 +16,8 @@ class IdentityProvider < ApplicationRecord
   acts_as_tenant :tenant
 
   has_many :identities, dependent: :destroy
+  # The database stops them being managed when the provider is removed (on_delete: :nullify)
+  has_many :managed_users, class_name: "User", foreign_key: :managed_by_id, inverse_of: :managed_by, dependent: nil
 
   enum :protocol, { oidc: "oidc", saml: "saml" }, validate: true
 
@@ -39,6 +41,23 @@ class IdentityProvider < ApplicationRecord
   validates :issuer, :client_id, :client_secret, presence: true, if: -> { enabled? && oidc? }
   validates :idp_entity_id, :idp_sso_url, :idp_certificate, presence: true, if: -> { enabled? && saml? }
   validate :idp_certificate_is_a_certificate, if: :idp_certificate
+
+  # The provider's SCIM client, by the bearer token it sends
+  def self.find_by_scim_token(token)
+    find_by(scim_token_digest: scim_token_digest(token)) if token.present?
+  end
+
+  def self.scim_token_digest(token) = OpenSSL::Digest::SHA256.hexdigest(token)
+
+  # A new token for the provider's SCIM client, replacing any other. Only its
+  # digest is kept, so this is the one time it can be shown.
+  def generate_scim_token
+    "scim_#{SecureRandom.base58(40)}".tap { |token| update!(scim_token_digest: self.class.scim_token_digest(token)) }
+  end
+
+  def revoke_scim_token = update!(scim_token_digest: nil)
+
+  def provisions_users? = scim_token_digest.present?
 
   # Where sign-in starts; the callback and SAML metadata live underneath
   def auth_path = "/auth/#{protocol}/#{id}"

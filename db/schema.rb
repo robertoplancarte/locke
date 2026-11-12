@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_12_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -80,6 +80,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "creates_users", default: true, null: false
+    t.string "scim_token_digest"
+    t.index ["scim_token_digest"], name: "index_identity_providers_on_scim_token_digest", unique: true
     t.index ["tenant_id"], name: "index_identity_providers_on_tenant_id"
   end
 
@@ -143,6 +145,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
     t.bigint "access_grant_id", null: false
     t.string "nonce", null: false
     t.index ["access_grant_id"], name: "index_oauth_openid_requests_on_access_grant_id"
+  end
+
+  create_table "provisioning_issues", force: :cascade do |t|
+    t.bigint "tenant_id", null: false
+    t.bigint "identity_provider_id"
+    t.bigint "user_id"
+    t.string "source", null: false
+    t.string "message", null: false
+    t.jsonb "details", default: {}, null: false
+    t.integer "occurrences", default: 1, null: false
+    t.datetime "last_occurred_at", null: false
+    t.datetime "resolved_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["identity_provider_id"], name: "index_provisioning_issues_on_identity_provider_id"
+    t.index ["tenant_id", "resolved_at"], name: "index_provisioning_issues_on_tenant_id_and_resolved_at"
+    t.index ["tenant_id"], name: "index_provisioning_issues_on_tenant_id"
+    t.index ["user_id"], name: "index_provisioning_issues_on_user_id"
   end
 
   create_table "recovery_codes", force: :cascade do |t|
@@ -254,6 +274,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
     t.string "time_zone", default: "Etc/UTC", null: false
     t.string "theme", default: "system", null: false
     t.string "public_id", null: false
+    t.datetime "deactivated_at"
+    t.bigint "managed_by_id"
+    t.string "external_id"
+    t.index ["managed_by_id"], name: "index_users_on_managed_by_id"
     t.index ["public_id"], name: "index_users_on_public_id", unique: true
     t.index ["tenant_id", "email"], name: "index_users_on_tenant_id_and_email", unique: true
   end
@@ -275,6 +299,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
   add_foreign_key "oauth_access_tokens", "users", column: "resource_owner_id"
   add_foreign_key "oauth_applications", "tenants"
   add_foreign_key "oauth_openid_requests", "oauth_access_grants", column: "access_grant_id", on_delete: :cascade
+  add_foreign_key "provisioning_issues", "identity_providers", on_delete: :nullify
+  add_foreign_key "provisioning_issues", "tenants"
+  add_foreign_key "provisioning_issues", "users", on_delete: :nullify
   add_foreign_key "recovery_codes", "users"
   add_foreign_key "retired_subdomains", "tenants"
   add_foreign_key "security_keys", "users"
@@ -283,5 +310,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
   add_foreign_key "sign_in_tokens", "users"
   add_foreign_key "tenant_domains", "tenants"
   add_foreign_key "tenants", "identity_providers", column: "default_identity_provider_id", on_delete: :nullify
+  add_foreign_key "users", "identity_providers", column: "managed_by_id", on_delete: :nullify
   add_foreign_key "users", "tenants"
 end

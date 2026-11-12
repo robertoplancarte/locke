@@ -120,4 +120,27 @@ RSpec.describe "Authentication: one way to sign in", type: :request do
       expect(response).to redirect_to("/account")
     end
   end
+
+  # Which accounts may sign in is SignIn#refusal's call, covered in spec/models/sign_in_spec.rb
+  describe "an account Locke won't sign in" do
+    let_it_be(:identity_provider) { create(:identity_provider, tenant:, name: "Keycloak") }
+    let_it_be(:managed) { create(:user, tenant:, managed_by: identity_provider) }
+
+    it "is sent back to the sign-in page with the reason" do
+      sign_in_as managed
+
+      expect(response).to redirect_to(sign_in_path)
+      expect(flash[:alert]).to include("Sign in with Keycloak")
+    end
+
+    it "loses a session it already has once deactivated" do
+      grace = create(:user, tenant:)
+      sign_in_as grace
+      ActsAsTenant.with_tenant(tenant) { grace.update_column(:deactivated_at, Time.current) }
+
+      get account_path
+
+      expect(response).to redirect_to(sign_in_path)
+    end
+  end
 end

@@ -1,0 +1,66 @@
+<% content_for :title, "Users · #{current_tenant.name}" %>
+
+<h1 class="text-2xl font-semibold">Users</h1>
+<p class="mt-1 text-sm text-gray-600">
+  People with an account at <%= current_tenant.name %>, and anything your identity providers couldn't update here.
+</p>
+
+<dl class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <% { "Active users" => @counts.active,
+       "Signed in in the last #{UserCounts::RECENT.inspect}" => @counts.signed_in_recently,
+       "Deactivated" => @counts.deactivated }.each do |label, count| %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <dt class="text-sm text-gray-500"><%= label %></dt>
+      <dd class="mt-2 text-3xl font-semibold tabular-nums"><%= number_with_delimiter count %></dd>
+    </div>
+  <% end %>
+</dl>
+
+<% if (managed = @counts.managed_by_provider).any? %>
+  <section class="mt-8 rounded-lg border border-gray-200 bg-white p-6">
+    <h2 class="text-sm font-semibold">Managed by identity providers</h2>
+    <p class="mt-1 text-sm text-gray-500">Active accounts a provider keeps up to date, which only sign in through it.</p>
+    <ul class="mt-4 divide-y divide-gray-100 text-sm">
+      <% managed.each do |identity_provider, count| %>
+        <li class="flex items-center justify-between gap-4 py-2">
+          <%= link_to identity_provider.name, edit_settings_identity_provider_path(identity_provider), class: "underline" %>
+          <span class="tabular-nums"><%= pluralize number_with_delimiter(count), "user" %></span>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>
+
+<section id="issues" class="mt-8">
+  <h2 class="text-lg font-semibold">Needs attention</h2>
+  <% if @issues.any? %>
+    <p class="mt-1 text-sm text-gray-600">
+      Changes a provider sent that couldn't be applied. Fix the account or the provider's data, then mark the issue resolved.
+    </p>
+    <ul class="mt-4 divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+      <% @issues.each do |issue| %>
+        <li id="<%= dom_id(issue) %>" class="flex flex-wrap items-start justify-between gap-4 p-6">
+          <div class="min-w-0 flex-1">
+            <p class="font-medium"><%= issue.message %></p>
+            <p class="mt-1 text-xs text-gray-500">
+              <%= issue.source_scim? ? "From SCIM provisioning" : "From a sign-in" %>
+              · last <%= time_ago_in_words(issue.last_occurred_at) %> ago
+              <% if issue.occurrences > 1 %>· <%= pluralize issue.occurrences, "time" %><% end %>
+            </p>
+            <% if issue.details.any? %>
+              <dl class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
+                <% issue.details.each do |key, value| %>
+                  <div><dt class="inline font-medium"><%= key.humanize %>:</dt> <dd class="inline font-mono"><%= value %></dd></div>
+                <% end %>
+              </dl>
+            <% end %>
+          </div>
+          <%= button_to "Mark resolved", user_management_issue_resolution_path(issue),
+                class: "cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50" %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="mt-1 text-sm text-gray-600">Nothing right now. Your identity providers' changes have all been applied.</p>
+  <% end %>
+</section>

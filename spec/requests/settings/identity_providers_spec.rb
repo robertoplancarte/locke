@@ -94,4 +94,23 @@ RSpec.describe "Settings: identity providers", type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  describe "SCIM tokens" do
+    let(:identity_provider) { create(:identity_provider, tenant:, name: "Keycloak") }
+
+    it "shows a new token once, and stops accepting it once it's removed" do
+      post settings_identity_provider_scim_token_path(identity_provider)
+      follow_redirect!
+
+      token = response.parsed_body.at_css("#scim_token").text
+      expect(ActsAsTenant.with_tenant(tenant) { IdentityProvider.find_by_scim_token(token) }).to eq(identity_provider)
+      expect(response.body).to include("http://acme.localhost/scim/v2")
+
+      get edit_settings_identity_provider_path(identity_provider)
+      expect(response.body).not_to include(token)
+
+      delete settings_identity_provider_scim_token_path(identity_provider)
+      expect(identity_provider.reload).not_to be_provisions_users
+    end
+  end
 end

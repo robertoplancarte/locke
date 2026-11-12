@@ -85,6 +85,33 @@ RSpec.describe ProviderAccount do
       let_it_be(:okta, refind: true) { create(:identity_provider, tenant:) }
       let(:identity_provider) { okta }
 
+      it "manages the accounts it creates, with the name it gives" do
+        account = described_class.new(tenant:, provider: "oidc", uid: "ada-uid", email: "ada@example.com", name: "Ada", identity_provider:)
+
+        expect(account.match.user).to be_new_record.and have_attributes(managed_by: okta, name: "Ada")
+      end
+
+      context "when it manages the account it signs in to" do
+        let_it_be(:ada, refind: true) { create(:user, tenant:, email: "old@example.com", name: "Old name", managed_by: okta) }
+        let_it_be(:identity) { create(:identity, user: ada, tenant:, provider: "oidc", uid: "ada-uid", identity_provider: okta) }
+
+        let(:provider_account) do
+          described_class.new(tenant:, provider: "oidc", uid: "ada-uid", email: "ada@example.com", name: "Ada", identity_provider:)
+        end
+
+        it "brings its name and email up to date" do
+          expect(match.user).to eq(ada)
+          expect(ada.reload).to have_attributes(email: "ada@example.com", name: "Ada", verified: true)
+        end
+
+        it "keeps the email when another account has the new one, and reports it" do
+          create(:user, tenant:, email: "ada@example.com")
+
+          expect(match.user.reload).to have_attributes(email: "old@example.com", name: "Ada")
+          expect(ProvisioningIssue.sole).to have_attributes(user: ada, identity_provider: okta, source: "sign_in")
+        end
+      end
+
       context "when the same uid is linked at another provider" do
         let_it_be(:ada) { create(:user, tenant:, email: "ada@example.com") }
         let_it_be(:entra_identity) do

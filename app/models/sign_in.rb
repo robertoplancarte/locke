@@ -41,6 +41,16 @@ class SignIn
     user.otp_required_for_sign_in? && amr.intersection(SECOND_FACTORS).none?
   end
 
+  # Why the user can't sign in this way, or nil when they can. A deactivated
+  # account can't sign in at all, and one a provider manages only through it.
+  def refusal
+    if !user.active?
+      "Your account has been deactivated"
+    elsif user.managed_by && identity_provider != user.managed_by
+      "Your account is managed by #{user.managed_by.name}. Sign in with #{user.managed_by.name} instead."
+    end
+  end
+
   # Carries the sign-in through the 2FA challenge, kept in the Rails session
   def challenge_token
     self.class.verifier.generate({ user_id: user.id, amr:, identity_provider_id: identity_provider&.id },
@@ -57,6 +67,7 @@ class SignIn
   # they sign in again (see Session#reauthenticate!)
   def complete!(replacing: nil)
     raise "A second factor is still required" if second_factor_required?
+    raise "Sign-in refused: #{refusal}" if refusal
 
     amr = self.amr.many? ? self.amr | [ "mfa" ] : self.amr
     session = if replacing&.user_id == user.id

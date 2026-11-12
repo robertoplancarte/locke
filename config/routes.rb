@@ -20,7 +20,9 @@ Rails.application.routes.draw do
       resources :domains, only: %i[index create destroy] do
         resource :check, only: :create, module: :domains
       end
-      resources :identity_providers, except: :show
+      resources :identity_providers, except: :show do
+        resource :scim_token, only: %i[create destroy], module: :identity_providers
+      end
       # The tenant's own OIDC apps. Locke's pages, not Doorkeeper's: those would
       # also list and change the global apps every tenant shares.
       resources :applications do
@@ -73,6 +75,20 @@ Rails.application.routes.draw do
     get "/auth/saml/:identity_provider_id/metadata", to: "identity_providers/saml_metadata#show", as: :saml_metadata
     post "users/:user_id/masquerade", to: "masquerades#create", as: :user_masquerade
     resource :invitation, only: [ :new, :create ]
+
+    # SCIM 2.0, for the tenant's identity providers to manage its users
+    scope "scim/v2", module: :scim, as: :scim do
+      resources :users, path: "Users", only: %i[index show create update destroy]
+      get "ServiceProviderConfig", to: "discovery#service_provider_config", as: :service_provider_config
+      get "ResourceTypes", to: "discovery#resource_types", as: :resource_types
+    end
+
+    namespace :user_management do
+      root "dashboards#show"
+      resources :issues, only: [] do
+        resource :resolution, only: :create, module: :issues
+      end
+    end
     namespace :sessions do
       resource :passwordless, only: [ :edit, :create ]
       resource :sudo, only: [ :new, :create ]

@@ -3,6 +3,10 @@ class User < ApplicationRecord
 
   has_secure_password
 
+  # The tenant's identity provider that owns the account, if any: it keeps the
+  # account up to date, and its people can only sign in through it
+  belongs_to :managed_by, class_name: "IdentityProvider", optional: true
+
   # Deterministic, so accounts can still be found by email
   encrypts :email, deterministic: true
   encrypts :otp_secret, :name
@@ -35,12 +39,17 @@ class User < ApplicationRecord
   normalizes :email, with: -> { _1.strip.downcase }
   normalizes :name, with: -> { _1.squish.presence }
 
+  scope :active, -> { where(deactivated_at: nil) }
+  scope :deactivated, -> { where.not(deactivated_at: nil) }
+
   def display_name = name || email
 
   # Up to two letters for an avatar: from the name's words, or the email's first letter
   def initials = (name ? name.split.map(&:first).values_at(0, -1).uniq.join : email.first).upcase
 
   def two_factor_enabled? = otp_required_for_sign_in?
+
+  def active? = deactivated_at.nil?
 
   # Already-enrolled users can always manage their setup, even after the tenant turns 2FA off
   def can_set_up_two_factor? = two_factor_enabled? || !tenant.two_factor_off?
@@ -84,6 +93,28 @@ class User < ApplicationRecord
 
     sessions.where.not(id: keeping).find_each(&:log_out)
     true
+  end
+
+  # Updates the account as its identity provider says. The provider vouches for
+  # the email, so it stays verified even when it changes.
+  def update_from_provider(attributes)
+    update(attributes) && (verified? || update(verified: true))
+  end
+
+  # A deactivated account can't sign in, and its sessions end everywhere, apps included
+  def deactivate
+    return unless active?
+
+    update!(deactivated_at: Time.current)
+    sessions.find_each(&:log_out)
+    events.create! action: "deactivated"
+  end
+
+  def reactivate
+    return if active?
+
+    update!(deactivated_at: nil)
+    events.create! action: "reactivated"
   end
 
   private

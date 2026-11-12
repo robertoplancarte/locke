@@ -81,7 +81,8 @@ class Sessions::OmniauthController < ApplicationController
 
     def provider_account
       @provider_account ||= ProviderAccount.new(
-        tenant: current_tenant, provider: omniauth.provider, uid: omniauth.uid, email: omniauth.info.email, identity_provider:
+        tenant: current_tenant, provider: omniauth.provider, uid: omniauth.uid, email: omniauth.info.email,
+        name: omniauth.info.name, identity_provider:
       )
     end
 

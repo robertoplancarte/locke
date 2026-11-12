@@ -27,9 +27,10 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  # Joining the tenant-scoped users means a session only counts on its own tenant's hosts
+  # Joining the tenant-scoped users means a session only counts on its own tenant's hosts.
+  # Deactivating a user ends their sessions; this makes sure none outlives it.
   def find_session_record
-    Session.joins(:user).find_by(id: cookies.signed[:session_token])
+    Session.joins(:user).merge(User.active).find_by(id: cookies.signed[:session_token])
   end
 
   # Tenants can require 2FA; until it's set up, signed-in users can only set it up or log out

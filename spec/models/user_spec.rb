@@ -106,4 +106,37 @@ RSpec.describe User, type: :model do
       expect(user.sessions).to contain_exactly(here, elsewhere)
     end
   end
+
+  describe "#deactivate" do
+    let_it_be(:tenant) { create(:tenant) }
+    let_it_be(:user, refind: true) { create(:user, tenant:) }
+    let_it_be(:session) { create(:session, user:) }
+
+    around { |example| ActsAsTenant.with_tenant(tenant) { example.run } }
+
+    it "logs out every session, and can be undone" do
+      user.deactivate
+
+      expect(user).not_to be_active
+      expect(user.sessions).to be_empty
+      expect(user.events.pluck(:action)).to include("deactivated")
+
+      user.reactivate
+      expect(user).to be_active
+      expect(user.events.pluck(:action)).to include("reactivated")
+    end
+  end
+
+  describe "#update_from_provider" do
+    let_it_be(:tenant) { create(:tenant) }
+    let_it_be(:user, refind: true) { create(:user, tenant:) }
+
+    around { |example| ActsAsTenant.with_tenant(tenant) { example.run } }
+
+    it "keeps a changed email verified, as the provider vouches for it" do
+      expect(user.update_from_provider(email: "new@example.com")).to be(true)
+
+      expect(user.reload).to have_attributes(email: "new@example.com", verified: true)
+    end
+  end
 end
