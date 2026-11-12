@@ -100,4 +100,30 @@ RSpec.describe SignIn do
       expect(described_class.from_challenge_token(nil)).to be_nil
     end
   end
+
+  describe "#refusal" do
+    it "is nil for an active user nobody manages" do
+      expect(described_class.new(user, method: :pwd).refusal).to be_nil
+    end
+
+    it "refuses a deactivated user, however they sign in" do
+      deactivated = create(:user, tenant:, deactivated_at: Time.current)
+
+      expect(described_class.new(deactivated, method: :fed, identity_provider:).refusal).to eq("Your account has been deactivated")
+    end
+
+    context "when a provider manages the user" do
+      let(:managed) { create(:user, tenant:, managed_by: identity_provider) }
+
+      it "only lets them sign in through it" do
+        expect(described_class.new(managed, method: :fed, identity_provider:).refusal).to be_nil
+        expect(described_class.new(managed, method: :pwd).refusal).to include("Sign in with #{identity_provider.name}")
+        expect(described_class.new(managed, method: :fed, identity_provider: create(:identity_provider, tenant:)).refusal).to be_present
+      end
+
+      it "won't start a session another way" do
+        expect { described_class.new(managed, method: :email).complete! }.to raise_error(/Sign-in refused/)
+      end
+    end
+  end
 end

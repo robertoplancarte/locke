@@ -6,7 +6,9 @@ module SignsIn
 
   private
     def begin_sign_in(sign_in)
-      if sign_in.second_factor_required?
+      if (refusal = sign_in.refusal)
+        redirect_to local_sign_in_path, alert: refusal
+      elsif sign_in.second_factor_required?
         session[:sign_in_challenge] = sign_in.challenge_token
         redirect_to new_two_factor_authentication_challenge_totp_path
       else

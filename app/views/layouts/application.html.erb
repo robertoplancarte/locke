@@ -17,6 +17,7 @@
           <% end %>
 
           <nav class="flex gap-5 text-sm">
+            <%= link_to "Users", user_management_root_path, class: "opacity-80 hover:opacity-100" %>
             <%= link_to "Branding", edit_settings_branding_path, class: "opacity-80 hover:opacity-100" %>
             <%= link_to "Domains", settings_domains_path, class: "opacity-80 hover:opacity-100" %>
             <%= link_to "Authentication", edit_settings_authentication_path, class: "opacity-80 hover:opacity-100" %>

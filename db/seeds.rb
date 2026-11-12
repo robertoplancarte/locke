@@ -29,6 +29,15 @@ end
 # the before_validation callbacks too, so the OTP secret, WebAuthn ID and public ID are set here.
 # alice@example.com exists on both tenants as two separate accounts.
 if Rails.env.development?
+  # Custom domains, reachable at http://acme.localhost and http://globex.localhost.
+  # Created active, skipping Cloudflare verification, which can't reach .localhost.
+  {
+    "acme" => "acme.localhost",
+    "globex" => "globex.localhost"
+  }.each do |subdomain, hostname|
+    Tenant.find_by!(subdomain:).domains.find_or_create_by!(hostname:) { it.status = :active }
+  end
+
   {
     "acme" => %w[alice@example.com bob@example.com],
     "globex" => %w[alice@example.com carol@example.com]
@@ -50,4 +59,6 @@ if Rails.env.development?
       end
     end
   end
+
+  load Rails.root.join("db/seeds/keycloak.rb") if ENV["KEYCLOAK_URL"]
 end

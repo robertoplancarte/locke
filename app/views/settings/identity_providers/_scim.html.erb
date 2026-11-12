@@ -1,0 +1,37 @@
+<section id="scim" class="mt-8 rounded-lg border border-gray-200 bg-white p-6">
+  <h2 class="text-sm font-semibold">Provisioning (SCIM)</h2>
+  <p class="mt-1 text-sm text-gray-500">
+    Let <%= identity_provider.name %> add, update and deactivate people's accounts here as it does in the provider.
+    The accounts it manages can then only sign in with <%= identity_provider.name %>.
+  </p>
+
+  <dl class="mt-4 space-y-3 text-sm">
+    <div>
+      <dt class="font-medium text-gray-900">SCIM base URL</dt>
+      <dd class="mt-1 rounded bg-gray-50 px-3 py-2 font-mono text-xs break-all"><%= request.base_url %>/scim/v2</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-gray-900">Bearer token</dt>
+      <% if (scim_token = flash[:scim_token]) %>
+        <dd id="scim_token" class="mt-1 rounded border border-yellow-200 bg-yellow-50 px-3 py-2 font-mono text-xs break-all"><%= scim_token %></dd>
+        <dd class="mt-1 text-xs text-yellow-800">Shown only this once. Enter it in the provider's SCIM settings now.</dd>
+      <% elsif identity_provider.provisions_users? %>
+        <dd class="mt-1 flex flex-wrap items-center gap-3 text-gray-500">
+          Only shown when it's generated.
+          <%= button_to "Generate new token", settings_identity_provider_scim_token_path(identity_provider),
+                form: { data: { turbo_confirm: "Generate a new token for #{identity_provider.name}? The current one stops working right away." } },
+                class: "cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 hover:bg-gray-50" %>
+          <%= button_to "Remove token", settings_identity_provider_scim_token_path(identity_provider), method: :delete,
+                form: { data: { turbo_confirm: "Remove the token? #{identity_provider.name} will no longer be able to manage users here." } },
+                class: "cursor-pointer rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50" %>
+        </dd>
+      <% else %>
+        <dd class="mt-1 flex flex-wrap items-center gap-3 text-gray-500">
+          None yet.
+          <%= button_to "Generate token", settings_identity_provider_scim_token_path(identity_provider),
+                class: "cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 hover:bg-gray-50" %>
+        </dd>
+      <% end %>
+    </div>
+  </dl>
+</section>
